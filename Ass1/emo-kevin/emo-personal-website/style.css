@@ -1,0 +1,16 @@
+body {
+    background-color:azure;
+    margin-top: 300px;
+    margin-bottom: 100px;
+    margin-right: 30%;
+    margin-left: 35%;
+}
+
+h1 {
+    font-family: 'Lucida Sans Regular', sans-serif;
+    font-weight: 600;
+    color:#36454F;
+    
+
+    text-align: left;
+}
