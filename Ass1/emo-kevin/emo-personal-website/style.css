@@ -1,5 +1,5 @@
 body {
-    background-color:azure;
+    background-color:#FCFCFF;
     margin-top: 300px;
     margin-bottom: 100px;
     margin-right: 30%;
@@ -8,8 +8,9 @@ body {
 
 h1 {
     font-family: 'Lucida Sans Regular', sans-serif;
+    font-size: 40px;
     font-weight: 600;
-    color:#36454F;
+    color:#343434;
     
 
     text-align: left;
