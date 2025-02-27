@@ -1,0 +1,79 @@
+html {
+    background-color: whitesmoke;
+}
+
+p {
+    font: 500 20px Georgia, serif;
+}
+
+ul {
+    font: 500 20px Georgia, serif;
+}
+
+h1{
+    color: #3D405B;
+    background-color: lightblue;
+    font-size: 50px;
+    width: fit-content;
+    padding: 15px 30px;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
+    display: block;
+}
+
+p#profile {
+    text-align: center;
+}
+
+#headshot {
+    width: 500px; 
+    height: 500px; 
+    object-fit: cover;
+    border-radius: 100px;
+    border: 10px solid lightblue;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+img.socials {
+    background-color: transparent;
+    width: 50px;
+}
+
+img#instagram:hover {
+    content: url('images/instagram (2).png');
+}
+
+img#linkedin:hover {
+    content: url('images/linkedin (1).png');
+}
+
+img#gmail:hover {
+    content: url('images/gmail (1).png');
+}
+
+#contacts {
+    text-align: center;
+}
+
+.inline1 {
+    display: inline-block;
+    width: 33%;
+    vertical-align: top;
+    min-height: 300px;
+}
+
+/* .inline1 h2 {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} */
+
+bio {
+    border: 10px dotted lightskyblue;
+}
+
+
+
+
+
