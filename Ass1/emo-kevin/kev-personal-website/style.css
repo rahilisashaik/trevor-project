@@ -25,6 +25,11 @@ p#profile {
     text-align: center;
 }
 
+p#facts {
+    text-align: center;
+    padding: 10px;
+}
+
 #headshot {
     width: 500px; 
     height: 500px; 
@@ -57,20 +62,23 @@ img#gmail:hover {
 
 .inline1 {
     display: inline-block;
-    width: 33%;
+    width: 30%;
     vertical-align: top;
     min-height: 300px;
+    border: 3px solid lightskyblue;
+    border-radius: 30px;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* .inline1 h2 {
+.inline1 h2 {
     min-height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-} */
+}
 
-bio {
-    border: 10px dotted lightskyblue;
+#bio {
+    border: 3px solid lightskyblue;
 }
 
 
