@@ -46,14 +46,15 @@ const LOG_EVENT_TYPES = [
     'session.created'
 ];
 
-// Create directories if they don't exist
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const audioDir = path.join(__dirname, 'audio');
+
 if (!fs.existsSync(audioDir)) {
+    console.log(`Creating directory: ${audioDir}`);
     fs.mkdirSync(audioDir, { recursive: true });
+} else {
+    console.log(`Directory already exists: ${audioDir}`);
 }
 
 let audioBuffers = [];
@@ -96,7 +97,13 @@ async function transcribeAudioAndDecideHelp() {
 
         await new Promise((resolve, reject) => {
             ffmpeg(rawAudioFilePath)
-                .outputOptions('-ar 16000') // Set sample rate for Whisper (16kHz)
+                .inputFormat('mulaw')  // Specify the input format
+                .inputOptions('-ar 8000')  // Set the input sample rate to 8000 Hz
+                .audioCodec('pcm_s16le')  // Use PCM signed 16-bit little-endian
+                .outputOptions([
+                    '-ar 8000',  // Set the output sample rate to 8000 Hz
+                    '-ac 1'      // Ensure mono-channel
+                ])
                 .toFormat('wav')
                 .save(convertedAudioFilePath)
                 .on('end', () => {
@@ -105,7 +112,7 @@ async function transcribeAudioAndDecideHelp() {
                 })
                 .on('error', reject);
         });
-
+        console.log("converted audio file saved, now using whisper to transcribe")
         const result = await whisper.transcribe({
             file: convertedAudioFilePath,
             model: 'base', // Change to 'medium' or 'large' for better accuracy
@@ -206,9 +213,16 @@ fastify.register(async (fastify) => {
                                 audio: data.media.payload
                             };
                             openAiWs.send(JSON.stringify(audioAppend));
+                            console.log("Received audio data chunk:", data.media.payload.length);
+
 
                             // Store audio payload for transcription
-                            audioBuffers.push(Buffer.from(data.media.payload, 'base64'));
+                            const rawAudio = Buffer.from(data.media.payload, 'base64');
+
+                            // Ensure it's saved in proper PCM format
+                            audioBuffers.push(rawAudio);
+                            console.log('Audio buffer length:', audioBuffers.length);  // Log buffer length
+
                         }
                         break;
                     case 'start':
@@ -227,6 +241,7 @@ fastify.register(async (fastify) => {
         connection.on('close', async () => {
             console.log('Client disconnected.');
 
+            
             if (audioBuffers.length > 0) {
                 await transcribeAudioAndDecideHelp();
             } else {
