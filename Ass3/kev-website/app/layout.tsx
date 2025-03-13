@@ -47,39 +47,39 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <nav className="bg-sky-200 w-full flex items-center justify-center shadow-sm">
+          <NavigationMenu>
+              <NavigationMenuList className="flex justify-center w-full px-7 py-7">
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>
+                    About Me
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <NavigationMenuLink href = "/"> Home</NavigationMenuLink>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
 
-        <NavigationMenu>
-        <NavigationMenuList>
-        
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>
-              About Me
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink href = "/"> Home</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>
+                    Resume
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <NavigationMenuLink href = "/resume">Resume</NavigationMenuLink>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
 
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>
-              Resume
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink href = "/resume">Resume</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>
+                    Contact
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <NavigationMenuLink href = "/contact">Contact</NavigationMenuLink>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
 
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>
-              Contact
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink href = "/contact">Contact</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-
-        </NavigationMenuList>
-      </NavigationMenu>
+              </NavigationMenuList>
+          </NavigationMenu>
+        </nav>
 
         {children}
 
