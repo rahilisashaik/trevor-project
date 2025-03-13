@@ -123,4 +123,19 @@
   body {
     @apply bg-background text-foreground;
   }
+  header {
+    font-family: 'Inter', sans-serif;
+    font-size: 70px;
+    text-decoration: underline;
+  }
+  #headshot {
+    width: 500x; 
+    height: 500px; 
+    object-fit: cover;
+    border-radius: 100px;
+    border: 10px solid lightblue;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  
 }
