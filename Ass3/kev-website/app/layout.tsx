@@ -81,9 +81,7 @@ export default function RootLayout({
         </NavigationMenuList>
       </NavigationMenu>
 
-
         {children}
-
 
       </body>
     </html>
