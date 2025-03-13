@@ -142,3 +142,8 @@ main {
   font-size: 13px;
 }
 
+.navbar {
+  background-color: #d3d3d3; 
+  color: black; /* Text color */
+}
+

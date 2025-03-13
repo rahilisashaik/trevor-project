@@ -25,13 +25,7 @@ export default function Home() {
         </div>  
 
         <div className="text">
-          <p>For fun, I enjoy training with Cal's Kung Fu Team, updating my <a href="https://www.strava.com/athletes/123047488"><u><b>Strava</b></u></a>, and listening to jazz.</p>
-          <p>Don't be a stranger, reach out:    
-            <a href="mailto:emilymo999@berkeley.edu" className="no-underline"><i className="fa-solid fa-envelope"></i></a>     
-            <a href="https://www.linkedin.com/in/emiilymo" className="no-underline"><i className="fa-brands fa-linkedin"></i></a>    
-            <a href="https://github.com/emilymo999" className="no-underline"><i className="fa-brands fa-github"></i></a>
-
-          </p>
+          <p>For fun, I enjoy training with Cal's Kung Fu Team, updating my <a href="https://www.strava.com/athletes/123047488"><u><b>Strava</b></u></a>, and listening to jazz. Don't be a stranger, reach out: emilymo999@berkeley.edu</p>
         </div>  
 
       </main>
