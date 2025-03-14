@@ -1,0 +1,471 @@
+Data loaded successfully with 157247 rows and 16 columns.
+
+First few rows of the data:
+                 Search terms report                   Unnamed: 1  ...  Unnamed: 14   Unnamed: 15
+0  January 1, 2023 - January 1, 2025                          NaN  ...          NaN           NaN
+1                        Search term                   Match type  ...  Conversions  Cost / conv.
+2         mental health support line  Exact match (close variant)  ...            9          1.24
+3           depression support group                  Broad match  ...            1          3.18
+4                  teen help hotline                  Broad match  ...            4          1.83
+
+[5 rows x 16 columns]
+Used row 1 as column headers
+
+Actual column names:
+['Search term', 'Match type', 'Added/Excluded', 'Campaign', 'Ad group', 'Currency code', 'Avg. CPM', 'Impr.', 'Interactions', 'Interaction rate', 'Avg. cost', 'Cost', 'Campaign type', 'Conv. rate', 'Conversions', 'Cost / conv.']
+
+Basic information about the dataset:
+Shape: (157245, 16)
+
+Summary statistics:
+                    Search term   Match type Added/Excluded  ... Conv. rate Conversions Cost / conv.
+count                    157245       157237           2270  ...     157245      157245       157245
+unique                   125331            5              3  ...        578         353         1555
+top     trevor project donation  Broad match       Excluded  ...      0.00%           0            0
+freq                         80       110721           1165  ...     153174      153176       153179
+
+[4 rows x 16 columns]
+Using column 'Impr.' for impressions filtering
+Removed 141490 rows (89.98%) with fewer than 5 impressions.
+Remaining rows: 15755
+Removed 0 sparse rows (0.00%) with more than 30% missing values.
+Remaining rows: 15755
+Using columns: 'Ad group', 'Search term', 'Avg. CPM'
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group '13-24':
+Search term  Avg. CPM
+        gay      0.08
+    shakira      2.86
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Asexual':
+             Search term  Avg. CPM
+am i on the ace spectrum       0.0
+           a c e meaning       0.0
+          asexual agenda       0.0
+    asexual flag meaning       0.0
+          define asexual       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Bisexual':
+               Search term  Avg. CPM
+            am i pansexual       0.0
+      definition pansexual       0.0
+how to explore bisexuality       0.0
+          my husband is bi       0.0
+              bisexual men       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - A&F 2023 - Match':
+                       Search term  Avg. CPM
+   trevor project meaningful miles      0.00
+trevor project 40 meaningful miles      0.00
+            the trevor project org     51.11
+                  trevor's project    338.67
+                        the trevor    590.00
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - August 2024 - BTS Match':
+            Search term  Avg. CPM
+  the trevor project ad       0.0
+trevor project 26 miles       0.0
+   dawko trevor project       0.0
+    trevor project song       0.0
+ trevor project charity     148.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Back to School - Match':
+                            Search term  Avg. CPM
+rebecca sugar trevor project fundraiser       0.0
+           rebecca sugar trevor project       0.0
+                     the travor project       0.0
+rebecca sugar trevor project fundraiser       0.0
+       the trevor project rebecca sugar       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - EOY 2023 - 3x Match':
+           Search term  Avg. CPM
+trevor project charity    174.55
+      thetrevorproject    507.27
+ the trevor foundation    656.00
+     trevor foundation   1288.24
+       trevors project   2878.54
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - EOY 2023 - 4x Match':
+            Search term  Avg. CPM
+ trevor project charity    112.00
+     the trevor project    876.76
+      trevor foundation   1314.58
+       thetrevorproject   1667.14
+trevor project donation  12629.17
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - EOY 2024 - 2:1 Pooled Match':
+            Search term  Avg. CPM
+        trevors project    396.67
+       thetrevorproject    591.43
+      trevor foundation    689.29
+       trevor's project    803.08
+trevor project donation   7560.00
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - EOY 2024 - 3:1 Community Match':
+                 Search term  Avg. CPM
+              travis project       0.0
+   what's the trevor project       0.0
+      the trevor project org       0.0
+who funds the trevor project       0.0
+  the trevor project funding       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - EOY 2024 - H&M Match':
+          Search term  Avg. CPM
+ smosh trevor project      0.00
+      the trevor fund      0.00
+the trevor foundation    251.42
+    trevor foundation    348.35
+     trevor's project    843.75
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Giving Tuesday 2023 - Match':
+       Search term  Avg. CPM
+       trevor proj    156.00
+ trevor foundation    323.33
+the trevor project    360.45
+     trevorproject    401.67
+the trevor project    539.75
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Giving Tuesday 2024 - Community Match':
+          Search term  Avg. CPM
+     trevor's project    557.27
+     thetrevorproject    588.57
+    trevor foundation    657.58
+the trevor foundation   1246.00
+       project trevor   1708.00
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Giving Tuesday 2024 - Sephora Match':
+          Search term  Avg. CPM
+   the trevor project    519.73
+       trevor project    565.41
+trevor project donate   7813.33
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - H&M 2023 - Match':
+                           Search term  Avg. CPM
+                trevor project charity       0.0
+    40 meaningful miles trevor project       0.0
+    trevor project 40 meaningful miles       0.0
+    trevor project 40 meaningful miles       0.0
+the trevor project 40 meaningful miles       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Helpline':
+                        Search term  Avg. CPM
+         the trevor project founder       0.0
+     who founded the trevor project       0.0
+what is the trevor project based on       0.0
+                   trevor space app       0.0
+             trevor project funding       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Kate Spade 2023 - Match':
+          Search term  Avg. CPM
+   the trevor project    490.91
+       trevor project    651.71
+     thetrevorproject    693.33
+    trevor foundation   1622.27
+trevor project donate   8711.67
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - March 2024 - Match':
+           Search term  Avg. CPM
+trevor project charity      0.00
+           trevor fund    245.00
+     trevor foundation    346.19
+      thetrevorproject    475.42
+      trevor's project    540.00
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - October 2024 - Match - Week 1':
+       Search term  Avg. CPM
+        the trevor    214.29
+  thetrevorproject    337.78
+  thetrevorproject    462.00
+the trevor project    521.10
+ trevor foundation    587.00
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - October 2024 - Match - Week 2':
+          Search term  Avg. CPM
+    the trevor effect       0.0
+the trevor foundation       0.0
+donate trevor project       0.0
+           the trevor       0.0
+    the trevor effect       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Phrase and Exact':
+          Search term  Avg. CPM
+the trevor foundation    117.14
+     trevor's project    148.00
+       project trevor    233.33
+       trever project    251.82
+     thetrevorproject    361.11
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Phrase and Exact - Evergreen':
+                   Search term  Avg. CPM
+     the trevor project trevor       0.0
+trevor from the trevor project       0.0
+   books by the trevor project       0.0
+        trevor project sign in       0.0
+        trevor project founder       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - Pride 2023 - Match':
+              Search term  Avg. CPM
+trevor project matt walsh       0.0
+matt walsh trevor project       0.0
+        he trevor project       0.0
+    trevor project canada       0.0
+trevor project fundraiser       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Branded - September 2024 - Match':
+                  Search term  Avg. CPM
+               trevor project       0.0
+       trevor project charity       0.0
+    trevor project fundraiser       0.0
+working at the trevor project       0.0
+                  call trevor       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Coming Out':
+                  Search term  Avg. CPM
+    gender transition therapy       0.0
+ftm gender affirming products       0.0
+                   coming out       0.0
+         lgbtq support groups       0.0
+                     i am gay       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Donation - General - Evergreen':
+                     Search term  Avg. CPM
+                           lbgqt       0.0
+                  donate to gaza       0.0
+                rainbow railroad       0.0
+       how to support lgbt youth       0.0
+best charities to donate to 2024       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Fundraiser - General':
+                     Search term  Avg. CPM
+grants for lgbtq nonprofits 2023       0.0
+                   lgbtq funders       0.0
+               lgbtq grants 2023       0.0
+lgbtq organizations to donate to       0.0
+          trevor project contact       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Gay and Lesbian':
+            Search term  Avg. CPM
+           what is lgbt       0.0
+     good lesbian books       0.0
+       types of gay men       0.0
+lesbians in minneapolis       0.0
+             queer mean       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Helpline / Hotline':
+                        Search term  Avg. CPM
+    anxiety and depression in teens       0.0
+             voices of hope lincoln       0.0
+                   lgbtq des moines       0.0
+non emergency mental health hotline       0.0
+                 lgbtq youth center       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'LGBTQ+ Chat':
+                Search term  Avg. CPM
+               chat lesbian       0.0
+              lgbtq servers       0.0
+              gay chat apps       0.0
+             las vegas lgbt       0.0
+lgbtq group therapy near me       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - A&F 2023 - Match':
+                 Search term  Avg. CPM
+                 lgbt donate       0.0
+              lgbt donations       0.0
+   lgbtq rights organization       0.0
+national lgbtq organizations       0.0
+bay area lgbtq organizations       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - Back to School - Match':
+                      Search term  Avg. CPM
+best trans charities to donate to      0.00
+ trans organizations to donate to      0.00
+            donate to lgbtq youth      0.00
+                     lgbt charity    174.44
+                   lgbt charities    192.86
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - EOY 2023 - 3x Match':
+         Search term  Avg. CPM
+best lgbtq charities      0.00
+ transgender charity      0.00
+     lgbtq charities    499.23
+     trans charities   2148.89
+      lgbt charities   2485.29
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - EOY 2023 - 4x Match':
+                      Search term  Avg. CPM
+                    lgbtq charity       0.0
+                  trans charities       0.0
+best lgbtq charities to donate to       0.0
+               best gay charities       0.0
+                  lgbtq charities    1884.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - Giving Tuesday 2023 - Match':
+                 Search term  Avg. CPM
+               lgbt donation       0.0
+                 gay charity       0.0
+lgbtq charities to donate to       0.0
+               gay charities       0.0
+        best trans charities       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - H&M 2023 - Match':
+                Search term  Avg. CPM
+ denver lgbtq organizations       0.0
+                  transanta       0.0
+        top lgbtq charities       0.0
+    gay rights organization       0.0
+florida lgbtq organizations       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - Kate Spade 2023 - Match':
+                      Search term  Avg. CPM
+best trans charities to donate to      0.00
+                  trans charities      0.00
+best lgbtq charities to donate to      0.00
+            transgender charities      0.00
+                  lgbtq charities   1074.62
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - Mental Health Awareness Month - Broader Youth Keywords':
+                                  Search term  Avg. CPM
+        mental health in high school students       0.0
+                 mental health in adolescence       0.0
+                youth mental health resources       0.0
+youth mental health first aid training online       0.0
+                      teens and mental health       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Nonbrand - Mental Health Awareness Month - General':
+                             Search term  Avg. CPM
+mental health awareness month newsletter       0.0
+        mental health awareness festival       0.0
+     mental health awareness month email       0.0
+             lgbtq mental health near me       0.0
+             charities for mental health       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Post-Pride 2024 - 1:1 Match':
+               Search term  Avg. CPM
+     the trevor project ad      0.00
+trevor project internships      0.00
+               call trevor      0.00
+trevor project internships      0.00
+         trevor foundation    185.65
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Post-Pride 2024 - 2:1 Match':
+               Search term  Avg. CPM
+trevor project internships       0.0
+trevor project internships       0.0
+               call trevor       0.0
+     the trevor project ad       0.0
+                the trevor       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Post-Pride 2024 - 3:1 Match':
+               Search term  Avg. CPM
+     the trevor project ad       0.0
+trevor project internships       0.0
+trevor project internships       0.0
+           trevors project     254.0
+         trevor foundation     271.2
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - Board Match':
+                     Search term  Avg. CPM
+reputable donation organizations       0.0
+               charitable giving       0.0
+                   gay charities       0.0
+            best child charities       0.0
+                       gay pride       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - H&M Match':
+      Search term  Avg. CPM
+       icc donate       0.0
+ charity donation       0.0
+  pride donations       0.0
+donate to charity       0.0
+houston donations       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - Hot Topic Match':
+                  Search term  Avg. CPM
+                     donation       0.0
+  best places to donate money       0.0
+best non profits to donate to       0.0
+   organizations to donate to       0.0
+            memorial donation       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - Lululemon Match':
+                  Search term  Avg. CPM
+            donate to charity       0.0
+       purple heart donations       0.0
+      give to give foundation       0.0
+best non profits to donate to       0.0
+              pride donations       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - Non-Match':
+                Search term  Avg. CPM
+     charities to donate to       0.0
+        causes to donate to       0.0
+best places to donate money       0.0
+            where to donate       0.0
+        donate to a charity       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Pride 2024 - Open/Community Match':
+         Search term  Avg. CPM
+     donate 50 cents       0.0
+   lgbtq fundraisers       0.0
+children's charities       0.0
+    june pride month       0.0
+  opi trevor project       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Suicide Prevention':
+                                       Search term  Avg. CPM
+youth suicide awareness prevention and postvention       0.0
+                          nebraska suicide hotline       0.0
+                                 lgbtq crisis line       0.0
+                               suicide hotline 988       0.0
+        how to help a child with suicidal thoughts       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Supportive Adults Prospecting':
+             Search term  Avg. CPM
+              gibi pride      0.01
+         lgbtq streamers      0.01
+coors light pride parade      0.01
+lgbtq tiktoks coming out      0.01
+               msa pride      0.01
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'Transgender':
+                   Search term  Avg. CPM
+what do pronouns she they mean       0.0
+   signs of being gender fluid       0.0
+            trans male meaning       0.0
+                    trans girl       0.0
+                gender clinics       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'TrevorSpace':
+                  Search term  Avg. CPM
+                  trevor talk       0.0
+   what is the trevor project       0.0
+                gay teen chat       0.0
+        donate trevor project       0.0
+working at the trevor project       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'competitors':
+            Search term  Avg. CPM
+              uta pride       0.0
+ how to be a trans ally       0.0
+   immigration equality       0.0
+              hrc lgbtq       0.0
+los angeles lgbt center       0.0
+
+Top 5 Search Terms with lowest Avg. CPM for Ad Group 'prospecting':
+       Search term  Avg. CPM
+houston pride 2023       0.0
+ pride market 2023       0.0
+      hope charity       0.0
+    lgbtq friendly       0.0
+ hadassah donation       0.0
+
+Ad Group with the largest number of rows: 'Supportive Adults Prospecting' with 3283 rows
+
+Ad Group with most complete data: 'Branded - Giving Tuesday 2024 - Sephora Match'
+  Row count: 3
+  Average completeness: 100.00%
+  Non-missing values: 48 out of 48 (100.00%)
+
+Saved impressions distribution plot to 'impressions_distribution.png'
+
+EDA completed successfully!
