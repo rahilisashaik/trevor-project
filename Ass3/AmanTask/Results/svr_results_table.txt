@@ -1,0 +1,81 @@
+SVR Model Performance Results
+============================
+
+Target: Avg. CPM
+------------------------------------------------------------
+RMSE: 0.4488
+Mean Percentage Deviation: 117.90%
+
+Best Parameters:
+  C: 1.0
+  gamma: scale
+  kernel: rbf
+  epsilon: 0.1
+
+All Model Results:
+------------------------------------------------------------
+Model                     RMSE       Mean % Deviation    
+------------------------------------------------------------
+SVR (Default)             0.4488     117.90              %
+SVR (rbf)                 0.4488     117.90              %
+SVR (RandomizedSearch)    0.4492     105.27              %
+SVR (linear)              0.4771     129.58              %
+SVR (rbf)                 0.4864     137.35              %
+SVR (rbf)                 0.6376     166.90              %
+SVR (poly)                0.6511     162.47              %
+SVR (sigmoid)             558.9109   278417.04           %
+
+============================================================
+
+Target: Impr.
+------------------------------------------------------------
+RMSE: 38.6753
+Mean Percentage Deviation: 64.46%
+
+Best Parameters:
+  kernel: rbf
+  gamma: scale
+  epsilon: 0.2
+  C: 100
+
+All Model Results:
+------------------------------------------------------------
+Model                     RMSE       Mean % Deviation    
+------------------------------------------------------------
+SVR (RandomizedSearch)    38.6753    64.46               %
+SVR (rbf)                 38.6803    64.43               %
+SVR (poly)                38.7843    49.00               %
+SVR (linear)              38.8232    45.43               %
+SVR (rbf)                 38.8301    45.96               %
+SVR (Default)             38.8728    42.61               %
+SVR (rbf)                 38.8728    42.61               %
+SVR (sigmoid)             557.7495   4079.98             %
+
+============================================================
+
+Target: Interactions
+------------------------------------------------------------
+RMSE: 1.9102
+Mean Percentage Deviation: 77.77%
+
+Best Parameters:
+  kernel: rbf
+  C: 10.0
+  gamma: scale
+  epsilon: 0.1
+
+All Model Results:
+------------------------------------------------------------
+Model                     RMSE       Mean % Deviation    
+------------------------------------------------------------
+SVR (rbf)                 1.9102     77.77               %
+SVR (Default)             1.9289     88.74               %
+SVR (rbf)                 1.9289     88.74               %
+SVR (RandomizedSearch)    1.9378     91.80               %
+SVR (linear)              1.9398     92.53               %
+SVR (poly)                1.9481     83.75               %
+SVR (rbf)                 2.0511     82.20               %
+SVR (sigmoid)             558.8611   28384.37            %
+
+============================================================
+
