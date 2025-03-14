@@ -1,0 +1,42 @@
+Best SVR Model Performance Results
+================================
+
+Target: Avg. CPM
+------------------------------------------------------------
+RMSE: 0.5694
+Mean Percentage Deviation: 168.88%
+
+Parameters:
+  kernel: rbf
+  C: 10.0
+  gamma: scale
+  epsilon: 0.1
+
+============================================================
+
+Target: Impr.
+------------------------------------------------------------
+RMSE: 25.0986
+Mean Percentage Deviation: 39.20%
+
+Parameters:
+  kernel: rbf
+  C: 100.0
+  gamma: scale
+  epsilon: 0.1
+
+============================================================
+
+Target: Interactions
+------------------------------------------------------------
+RMSE: 1.2520
+Mean Percentage Deviation: 173139819263.97%
+
+Parameters:
+  kernel: rbf
+  C: 10.0
+  gamma: auto
+  epsilon: 0.2
+
+============================================================
+
