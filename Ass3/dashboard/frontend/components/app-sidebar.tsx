@@ -24,7 +24,7 @@ import { Switch } from "@/components/ui/switch"
 const data = {
   user: {
     name: "shadcn",
-    email: "m@example.com",
+    phoneNumber: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
@@ -37,12 +37,10 @@ const data = {
   ],
   mails: [
     {
-      name: "William Smith",
-      email: "williamsmith@example.com",
-      subject: "Meeting Tomorrow",
-      date: "09:34 AM",
-      teaser:
-        "Hi team, just a reminder about our meeting tomorrow at 10 AM.\nPlease come prepared with your project updates.",
+      name: "Poopybutt",
+      phoneNumber: "425-287-3470",
+      lastCall: "Meeting Tomorrow",
+      urgency: "09:34 AM",
     },
     {
       name: "Alice Smith",
@@ -146,7 +144,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Switch className="shadow-none" />
             </Label>
           </div>
-          <SidebarInput placeholder="Type to search..." />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="px-0">
@@ -154,17 +151,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {mails.map((mail) => (
                 <a
                   href="#"
-                  key={mail.email}
+                  key={mail.phoneNumber}
                   className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
                   <div className="flex w-full items-center gap-2">
                     <span>{mail.name}</span>{" "}
-                    <span className="ml-auto text-xs">{mail.date}</span>
+                    <span className="ml-auto text-xs">{mail.urgency}</span>
                   </div>
-                  <span className="font-medium">{mail.subject}</span>
-                  <span className="line-clamp-2 w-[360px] whitespace-break-spaces text-xs">
-                    {mail.teaser}
-                  </span>
+                  <span className="font-medium">{mail.lastCall}</span>
+                  
+                  
                 </a>
               ))}
             </SidebarGroupContent>
