@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Inbox } from "lucide-react"
+import { ChevronDown } from "lucide-react";
 
 import { NavUser } from "@/components/nav-user"
 import { Label } from "@/components/ui/label"
@@ -28,8 +29,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-
-// This is sample data
 const data = {
   user: {
     name: "shadcn",
@@ -109,11 +108,18 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Note: I'm using state to show active item.
-  // IRL you should use the url/router.
   const [activeItem, setActiveItem] = React.useState(data.navMain[0])
   const [mails, setMails] = React.useState(data.mails)
   const { setOpen } = useSidebar()
+
+  //sort by urgency by 
+  const sortByUrgency = () => {
+    setMails([...mails].sort((a, b) => b.urgency - a.urgency));
+  };
+
+  const sortByLastCall = () => {
+    setMails([...mails].sort((a, b) => new Date(b.lastCall) - new Date(a.lastCall)));
+  };
 
   return (
     <Sidebar
@@ -121,25 +127,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
       {...props}
     >
-
-      {/* This is the second sidebar */}
-      {/* We disable collapsible and let it fill remaining space */}
       <Sidebar collapsible="none" className="hidden flex-1 md:flex">
-        <SidebarHeader className="gap-3.5 border-b p-4">
+        <SidebarHeader className="gap-3.5 border-b bg-orange-200 p-4">
           <div className="flex w-full items-center justify-between">
             <div className="text-base font-medium text-foreground">
               {activeItem?.title}
             </div>
             <Label className="flex items-center gap-2 text-sm">
               <DropdownMenu>
-                <DropdownMenuTrigger>Filter By</DropdownMenuTrigger>
+                <DropdownMenuTrigger className="flex items-center gap-1">
+                  Filter By <ChevronDown className="w-4 h-4 relative top-0.5" />
+                </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>Urgency</DropdownMenuItem>
-                  <DropdownMenuItem>Last Call</DropdownMenuItem>
-                  <DropdownMenuItem>Idk, tickle my fancy! 😳👉👈</DropdownMenuItem>
+                  <DropdownMenuItem onClick={sortByUrgency}>Urgency</DropdownMenuItem>
+                  <DropdownMenuItem onClick={sortByLastCall}>Last Call</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </Label>
           </div>
         </SidebarHeader>
@@ -157,8 +160,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span className="ml-auto text-xs">Urgency: {mail.urgency}</span>
                   </div>
                   <span className="font-medium">Last Call: {mail.lastCall}</span>
-                  
-                  
                 </a>
               ))}
             </SidebarGroupContent>
