@@ -112,15 +112,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [mails, setMails] = React.useState(data.mails)
   const { setOpen } = useSidebar()
 
-  //sort by urgency by 
+  //make a new copy of mails using [...], then sort the array,  a and be represent the objects being compared, b.urgency - a.urgency is same as descending = true
   const sortByUrgency = () => {
     setMails([...mails].sort((a, b) => b.urgency - a.urgency));
   };
 
+  //same concept as above, except we do new Date() to ensure it's in date format
   const sortByLastCall = () => {
     setMails([...mails].sort((a, b) => new Date(b.lastCall) - new Date(a.lastCall)));
   };
 
+  //note onClick sort by etc etc, pretty straightforward yippppeeee
   return (
     <Sidebar
       collapsible="icon"
