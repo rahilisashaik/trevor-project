@@ -1,2 +1,15 @@
 .env
 **/.env
+**/Search_terms.csv 
+
+# FAISS related files
+**/*.index
+**/*.faiss
+**/faiss_indexes/
+**/faiss_index/
+**/*.faiss_index
+
+# Specific FAISS directories
+**/faiss_index/
+**/faiss_index_testing/
+
