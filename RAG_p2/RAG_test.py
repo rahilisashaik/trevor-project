@@ -72,14 +72,20 @@ def create_documents_from_df(df, is_evergreen):
     for idx, row in df.iterrows():
         # Extract search term from first column
         search_term = row.iloc[0]
-        content = f"Search terms report: {search_term}\nCategory: {category}\nRow: {idx}"
+        
+        # Extract match type (second column, index 1)
+        match_type = row['Unnamed: 1'] if pd.notna(row['Unnamed: 1']) else "Unknown Match Type"
+        
+        # Include match type in the content
+        content = f"Search terms report: {search_term}\nMatch Type: {match_type}\nCategory: {category}\nRow: {idx}"
         
         # Create document with metadata
         document = {
             "page_content": content,
             "metadata": {
                 "row": idx,
-                "category": category
+                "category": category,
+                "match_type": match_type
             }
         }
         documents.append(document)
@@ -138,13 +144,18 @@ def create_vector_db(documents, db_name, force_rebuild=False):
     return db
 
 # Function to query the appropriate database based on whether the query is evergreen or not
-def query_database(evergreen_db, non_evergreen_db, query, is_evergreen, k=20):
+def query_database(evergreen_db, non_evergreen_db, query, is_evergreen, match_type=None, k=20):
     db_to_use = evergreen_db if is_evergreen else non_evergreen_db
     db_type = "evergreen" if is_evergreen else "non-evergreen"
     
-    print(f"Querying {db_type} database with: '{query}'")
+    # Enhance query with match type if provided
+    enhanced_query = query
+    if match_type:
+        enhanced_query = f"Search terms report: {query}\nMatch Type: {match_type}"
+    
+    print(f"Querying {db_type} database with: '{enhanced_query}'")
     start_time = time.time()
-    results = db_to_use.similarity_search(query, k=k)
+    results = db_to_use.similarity_search(enhanced_query, k=k)
     end_time = time.time()
     print(f"Query completed in {end_time - start_time:.2f} seconds")
     return results
@@ -417,10 +428,19 @@ def run_test():
                 all_impressions_pct_dev.append(impressions_metrics["pct_dev"])
         
         if actual_interactions is not None and parsed_prediction.get("interactions") is not None:
-            interactions_metrics = calculate_metrics(actual_interactions, parsed_prediction["interactions"])
-            all_interactions_rmse.append(interactions_metrics["rmse"])
-            if interactions_metrics["pct_dev"] is not None:
-                all_interactions_pct_dev.append(interactions_metrics["pct_dev"])
+            if actual_interactions != 0:
+                interactions_metrics = calculate_metrics(actual_interactions, parsed_prediction["interactions"])
+                all_interactions_rmse.append(interactions_metrics["rmse"])
+                interactions_pct_dev = abs(parsed_prediction["interactions"] - actual_interactions) / abs(actual_interactions) * 100
+                all_interactions_pct_dev.append(interactions_pct_dev)
+            else:
+                # Handle zero actual interactions
+                if parsed_prediction["interactions"] == 0:
+                    # If both are zero, 0% deviation
+                    all_interactions_pct_dev.append(0)
+                else:
+                    # If prediction is non-zero but actual is zero, use a large value or special handling
+                    all_interactions_pct_dev.append(100)  # 100% error or another approach
         
         # Store result
         result = {
@@ -615,10 +635,16 @@ def calculate_accuracy_metrics(test_size=0.001):
     evergreen_cpm_pct_dev = []
     evergreen_impressions_pct_dev = []
     evergreen_interactions_pct_dev = []
+    evergreen_cpm_rmse = []
+    evergreen_impressions_rmse = []
+    evergreen_interactions_rmse = []
     
     non_evergreen_cpm_pct_dev = []
     non_evergreen_impressions_pct_dev = []
     non_evergreen_interactions_pct_dev = []
+    non_evergreen_cpm_rmse = []
+    non_evergreen_impressions_rmse = []
+    non_evergreen_interactions_rmse = []
     
     # Test on ALL test data
     print(f"Testing on all {len(test_df)} test samples...")
@@ -641,7 +667,7 @@ def calculate_accuracy_metrics(test_size=0.001):
         actual_interactions = float(row['Unnamed: 8']) if pd.notna(row['Unnamed: 8']) else None
         
         # Query the appropriate database
-        query_results = query_database(evergreen_db, non_evergreen_db, search_term, is_evergreen, k=20)
+        query_results = query_database(evergreen_db, non_evergreen_db, search_term, is_evergreen, match_type=match_type, k=20)
         
         # Extract metrics from results
         formatted_results = extract_metrics_from_results(query_results, evergreen_train_df, non_evergreen_train_df)
@@ -654,35 +680,93 @@ def calculate_accuracy_metrics(test_size=0.001):
         
         # Calculate percentage deviations and store by category
         if is_evergreen:
-            # CPM percentage deviation
-            if actual_avg_cpm is not None and parsed_prediction.get("avg_cpm") is not None and actual_avg_cpm != 0:
-                cpm_pct_dev = abs(parsed_prediction["avg_cpm"] - actual_avg_cpm) / abs(actual_avg_cpm) * 100
-                evergreen_cpm_pct_dev.append(cpm_pct_dev)
+            # CPM percentage deviation and RMSE
+            if actual_avg_cpm is not None and parsed_prediction.get("avg_cpm") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_avg_cpm], [parsed_prediction["avg_cpm"]])
+                rmse = np.sqrt(mse)
+                evergreen_cpm_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_avg_cpm != 0:
+                    cpm_pct_dev = abs(parsed_prediction["avg_cpm"] - actual_avg_cpm) / abs(actual_avg_cpm) * 100
+                    evergreen_cpm_pct_dev.append(cpm_pct_dev)
             
-            # Impressions percentage deviation
-            if actual_impressions is not None and parsed_prediction.get("impressions") is not None and actual_impressions != 0:
-                impressions_pct_dev = abs(parsed_prediction["impressions"] - actual_impressions) / abs(actual_impressions) * 100
-                evergreen_impressions_pct_dev.append(impressions_pct_dev)
+            # Impressions percentage deviation and RMSE
+            if actual_impressions is not None and parsed_prediction.get("impressions") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_impressions], [parsed_prediction["impressions"]])
+                rmse = np.sqrt(mse)
+                evergreen_impressions_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_impressions != 0:
+                    impressions_pct_dev = abs(parsed_prediction["impressions"] - actual_impressions) / abs(actual_impressions) * 100
+                    evergreen_impressions_pct_dev.append(impressions_pct_dev)
             
-            # Interactions percentage deviation
-            if actual_interactions is not None and parsed_prediction.get("interactions") is not None and actual_interactions != 0:
-                interactions_pct_dev = abs(parsed_prediction["interactions"] - actual_interactions) / abs(actual_interactions) * 100
-                evergreen_interactions_pct_dev.append(interactions_pct_dev)
+            # Interactions percentage deviation and RMSE
+            if actual_interactions is not None and parsed_prediction.get("interactions") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_interactions], [parsed_prediction["interactions"]])
+                rmse = np.sqrt(mse)
+                evergreen_interactions_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_interactions != 0:
+                    interactions_pct_dev = abs(parsed_prediction["interactions"] - actual_interactions) / abs(actual_interactions) * 100
+                    evergreen_interactions_pct_dev.append(interactions_pct_dev)
+                else:
+                    # Handle zero actual interactions
+                    if parsed_prediction["interactions"] == 0:
+                        # If both are zero, 0% deviation
+                        evergreen_interactions_pct_dev.append(0)
+                    else:
+                        # If prediction is non-zero but actual is zero, use a large value or special handling
+                        evergreen_interactions_pct_dev.append(100)  # 100% error or another approach
         else:
-            # CPM percentage deviation
-            if actual_avg_cpm is not None and parsed_prediction.get("avg_cpm") is not None and actual_avg_cpm != 0:
-                cpm_pct_dev = abs(parsed_prediction["avg_cpm"] - actual_avg_cpm) / abs(actual_avg_cpm) * 100
-                non_evergreen_cpm_pct_dev.append(cpm_pct_dev)
+            # CPM percentage deviation and RMSE
+            if actual_avg_cpm is not None and parsed_prediction.get("avg_cpm") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_avg_cpm], [parsed_prediction["avg_cpm"]])
+                rmse = np.sqrt(mse)
+                non_evergreen_cpm_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_avg_cpm != 0:
+                    cpm_pct_dev = abs(parsed_prediction["avg_cpm"] - actual_avg_cpm) / abs(actual_avg_cpm) * 100
+                    non_evergreen_cpm_pct_dev.append(cpm_pct_dev)
             
-            # Impressions percentage deviation
-            if actual_impressions is not None and parsed_prediction.get("impressions") is not None and actual_impressions != 0:
-                impressions_pct_dev = abs(parsed_prediction["impressions"] - actual_impressions) / abs(actual_impressions) * 100
-                non_evergreen_impressions_pct_dev.append(impressions_pct_dev)
+            # Impressions percentage deviation and RMSE
+            if actual_impressions is not None and parsed_prediction.get("impressions") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_impressions], [parsed_prediction["impressions"]])
+                rmse = np.sqrt(mse)
+                non_evergreen_impressions_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_impressions != 0:
+                    impressions_pct_dev = abs(parsed_prediction["impressions"] - actual_impressions) / abs(actual_impressions) * 100
+                    non_evergreen_impressions_pct_dev.append(impressions_pct_dev)
             
-            # Interactions percentage deviation
-            if actual_interactions is not None and parsed_prediction.get("interactions") is not None and actual_interactions != 0:
-                interactions_pct_dev = abs(parsed_prediction["interactions"] - actual_interactions) / abs(actual_interactions) * 100
-                non_evergreen_interactions_pct_dev.append(interactions_pct_dev)
+            # Interactions percentage deviation and RMSE
+            if actual_interactions is not None and parsed_prediction.get("interactions") is not None:
+                # Calculate RMSE
+                mse = mean_squared_error([actual_interactions], [parsed_prediction["interactions"]])
+                rmse = np.sqrt(mse)
+                non_evergreen_interactions_rmse.append(rmse)
+                
+                # Calculate percentage deviation
+                if actual_interactions != 0:
+                    interactions_pct_dev = abs(parsed_prediction["interactions"] - actual_interactions) / abs(actual_interactions) * 100
+                    non_evergreen_interactions_pct_dev.append(interactions_pct_dev)
+                else:
+                    # Handle zero actual interactions
+                    if parsed_prediction["interactions"] == 0:
+                        # If both are zero, 0% deviation
+                        non_evergreen_interactions_pct_dev.append(0)
+                    else:
+                        # If prediction is non-zero but actual is zero, use a large value or special handling
+                        non_evergreen_interactions_pct_dev.append(100)  # 100% error or another approach
         
         # Store result
         result = {
@@ -719,6 +803,22 @@ def calculate_accuracy_metrics(test_size=0.001):
     else:
         evergreen_metrics["avg_interactions_pct_dev"] = float('nan')
     
+    # Add RMSE metrics for evergreen
+    if evergreen_cpm_rmse:
+        evergreen_metrics["avg_cpm_rmse"] = np.mean(evergreen_cpm_rmse)
+    else:
+        evergreen_metrics["avg_cpm_rmse"] = float('nan')
+    
+    if evergreen_impressions_rmse:
+        evergreen_metrics["avg_impressions_rmse"] = np.mean(evergreen_impressions_rmse)
+    else:
+        evergreen_metrics["avg_impressions_rmse"] = float('nan')
+    
+    if evergreen_interactions_rmse:
+        evergreen_metrics["avg_interactions_rmse"] = np.mean(evergreen_interactions_rmse)
+    else:
+        evergreen_metrics["avg_interactions_rmse"] = float('nan')
+    
     # Calculate overall accuracy score for evergreen
     all_evergreen_pct_devs = evergreen_cpm_pct_dev + evergreen_impressions_pct_dev + evergreen_interactions_pct_dev
     if all_evergreen_pct_devs:
@@ -744,6 +844,22 @@ def calculate_accuracy_metrics(test_size=0.001):
     else:
         non_evergreen_metrics["avg_interactions_pct_dev"] = float('nan')
     
+    # Add RMSE metrics for non-evergreen
+    if non_evergreen_cpm_rmse:
+        non_evergreen_metrics["avg_cpm_rmse"] = np.mean(non_evergreen_cpm_rmse)
+    else:
+        non_evergreen_metrics["avg_cpm_rmse"] = float('nan')
+    
+    if non_evergreen_impressions_rmse:
+        non_evergreen_metrics["avg_impressions_rmse"] = np.mean(non_evergreen_impressions_rmse)
+    else:
+        non_evergreen_metrics["avg_impressions_rmse"] = float('nan')
+    
+    if non_evergreen_interactions_rmse:
+        non_evergreen_metrics["avg_interactions_rmse"] = np.mean(non_evergreen_interactions_rmse)
+    else:
+        non_evergreen_metrics["avg_interactions_rmse"] = float('nan')
+    
     # Calculate overall accuracy score for non-evergreen
     all_non_evergreen_pct_devs = non_evergreen_cpm_pct_dev + non_evergreen_impressions_pct_dev + non_evergreen_interactions_pct_dev
     if all_non_evergreen_pct_devs:
@@ -758,14 +874,20 @@ def calculate_accuracy_metrics(test_size=0.001):
     print(f"Non-evergreen test samples: {len(non_evergreen_cpm_pct_dev + non_evergreen_impressions_pct_dev + non_evergreen_interactions_pct_dev) // 3}")
     
     print("\nEVERGREEN METRICS:")
+    print(f"Evergreen CPM RMSE: {evergreen_metrics['avg_cpm_rmse']:.2f}")
     print(f"Evergreen CPM Percentage Deviation: {evergreen_metrics['avg_cpm_pct_dev']:.2f}%")
+    print(f"Evergreen Impressions RMSE: {evergreen_metrics['avg_impressions_rmse']:.2f}")
     print(f"Evergreen Impressions Percentage Deviation: {evergreen_metrics['avg_impressions_pct_dev']:.2f}%")
+    print(f"Evergreen Interactions RMSE: {evergreen_metrics['avg_interactions_rmse']:.2f}")
     print(f"Evergreen Interactions Percentage Deviation: {evergreen_metrics['avg_interactions_pct_dev']:.2f}%")
     print(f"Evergreen Accuracy Score: {evergreen_metrics['accuracy_score']:.2f}%")
     
     print("\nNON-EVERGREEN METRICS:")
+    print(f"Non-Evergreen CPM RMSE: {non_evergreen_metrics['avg_cpm_rmse']:.2f}")
     print(f"Non-Evergreen CPM Percentage Deviation: {non_evergreen_metrics['avg_cpm_pct_dev']:.2f}%")
+    print(f"Non-Evergreen Impressions RMSE: {non_evergreen_metrics['avg_impressions_rmse']:.2f}")
     print(f"Non-Evergreen Impressions Percentage Deviation: {non_evergreen_metrics['avg_impressions_pct_dev']:.2f}%")
+    print(f"Non-Evergreen Interactions RMSE: {non_evergreen_metrics['avg_interactions_rmse']:.2f}")
     print(f"Non-Evergreen Interactions Percentage Deviation: {non_evergreen_metrics['avg_interactions_pct_dev']:.2f}%")
     print(f"Non-Evergreen Accuracy Score: {non_evergreen_metrics['accuracy_score']:.2f}%")
     
@@ -803,10 +925,11 @@ def interactive_search_with_prediction(evergreen_db, non_evergreen_db):
         print("\nSelect match type:")
         print("1. Broad Match")
         print("2. Exact Match")
-        print("3. Phrase Match (close variant)")
+        print("3. Phrase Match")
+        print("4. Phrase Match (close variant)")
         
         while True:
-            match_type_input = input("Enter your choice (1-3): ")
+            match_type_input = input("Enter your choice (1-4): ")
             if match_type_input == '1':
                 match_type = "Broad Match"
                 break
@@ -814,13 +937,16 @@ def interactive_search_with_prediction(evergreen_db, non_evergreen_db):
                 match_type = "Exact Match"
                 break
             elif match_type_input == '3':
+                match_type = "Phrase Match"
+                break
+            elif match_type_input == '4':
                 match_type = "Phrase Match (close variant)"
                 break
             else:
-                print("Please enter a number between 1 and 3")
+                print("Please enter a number between 1 and 4")
         
         # Perform search to get similar terms from the appropriate database
-        results = query_database(evergreen_db, non_evergreen_db, query, is_evergreen, k=20)
+        results = query_database(evergreen_db, non_evergreen_db, query, is_evergreen, match_type=match_type, k=20)
         
         # Load the appropriate training dataframe
         evergreen_train_df, non_evergreen_train_df, _, _ = load_and_split_data("Search_terms.csv", test_size=0.001)
