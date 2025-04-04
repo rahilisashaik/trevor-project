@@ -13,3 +13,6 @@
 **/faiss_index/
 **/faiss_index_testing/
 
+# scraping keys
+/Scraping/client_secret_851423732587-ujjvn72stl0tc9jui632qek5regt83ve.apps.googleusercontent.com.json
+/Scraping/service_account.json
