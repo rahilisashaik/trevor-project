@@ -1,0 +1,25 @@
+=== Summary for call01.txt ===
+- Main issue: Jimmy is struggling with romantic feelings for his male mentee in a college mentorship club, which is causing him confusion about his identity and fear of others finding out.
+- Emotional state: Jimmy is feeling overwhelmed, conflicted, scared, and confused, with underlying feelings of fear of rejection and self-doubt about his sexual identity.
+- Urgency level: Medium. Jimmy is experiencing significant emotional distress and sleeplessness, but there isn't an immediate crisis or danger mentioned.
+
+=== Summary for call02.txt ===
+- Main issue: Jonathon is experiencing complex feelings of attraction toward his roommate, Kijun, and is unsure how to handle these emotions, especially given Kijun's unresolved feelings for his ex.
+- Emotional state: Jonathon feels confused, scared, and uncertain about his feelings and the potential impact of expressing them.
+- Urgency level: Medium. Jonathon is struggling with emotional turmoil but is not in immediate distress, seeking guidance on how to navigate his feelings.
+
+=== Summary for call03.txt ===
+- Main issue: Vedant is grappling with his sexual identity and interests, as his involvement in a kink club has led him to question the version of himself he has always tried to be, particularly in light of his traditional upbringing and familial expectations.
+- Emotional state: Vedant feels confused, ashamed, lost, and scared due to the realization that his desires and identity might conflict with the expectations of his family and his previous understanding of himself.
+- Urgency level: Medium
+
+=== Summary for call04.txt ===
+- Main issue: Ryu is grappling with complex feelings about his sexual orientation and relationship preferences after growing up in a strict environment. He is exploring attractions to multiple people and considering a non-traditional relationship structure, which conflicts with his cultural background.
+- Emotional state: Ryu feels confused and guilty but also a sense of excitement about exploring his true feelings. He experiences a mix of fear, shame, and curiosity.
+- Urgency level: Medium. While Ryu is not in immediate distress, he is facing an internal struggle that affects his sense of identity and self-worth, and he is seeking support to navigate these feelings.
+
+=== Summary for call05.txt ===
+- Main issue: The caller is experiencing feelings of hopelessness and has been contemplating self-harm due to overwhelming stress from school and a lack of close personal connections. 
+- Emotional state: The caller is feeling distressed, tired, and like they're drowning in their emotions, with a strong sense of being alone and a fear of burdening others.  
+- Urgency level: High - The caller has expressed thoughts of self-harm and a desire not to be present anymore.
+
