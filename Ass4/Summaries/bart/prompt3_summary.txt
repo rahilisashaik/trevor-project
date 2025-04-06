@@ -1,0 +1,15 @@
+=== Summary for call01.txt ===
+Caller: I think I’m in love with my little. He’s sweet, kind, he looks up to me… and now I feel like a mess. Caller: No one knows.
+
+=== Summary for call02.txt ===
+The Trevor Project is a confidential support service for students in need of emotional and physical support. Use the weekly Newsquiz to test your knowledge of stories you saw on CNN.com.
+
+=== Summary for call03.txt ===
+The Trevor Project is an online support group for people in need of emotional support. The Trevor Project offers confidential support in the U.S. and around the world. For confidential support, call the Samaritans on 08457 90 90 90 or visit a local Samaritans branch, see www.samaritans.org for details.
+
+=== Summary for call04.txt ===
+The Trevor Project is a weekly, confidential support service for people in need of support. The Trevor Project offers support in the form of a live, confidential chat. The call will be monitored by a counselor.
+
+=== Summary for call05.txt ===
+The Trevor Project is a support group for people in need of mental-health care. The Trevor Project helps people deal with their emotional and physical well-being.
+
