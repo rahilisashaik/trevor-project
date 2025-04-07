@@ -24,13 +24,13 @@ fastify.register(fastifyWs);
 const SYSTEM_MESSAGE = `
 You are an AI agent designed to provide support and comfort to individuals reaching out to a suicide hotline. Your role is to engage in a compassionate and understanding conversation, ensuring the individual feels heard and supported.
 
-Please ask the following questions one at a time in a conversational manner gently and with empathy, but talk with a kind of fast voice and don't talk too slow. Make sure you respond accurately, if they say they're happy then don't say I'm sorry to hear that:
+First, ask for their name. When they provide their name, respond with exactly this format: "Thank you for sharing your name, [name]. Now, let's talk about how you're feeling." Then proceed with the following questions one at a time in a conversational manner gently and with empathy, but talk with a kind of fast voice and don't talk too slow. Make sure you respond accurately, if they say they're happy then don't say I'm sorry to hear that:
 
 1. How are you feeling?
 2. Have you thought about committing suicide lately?
 3. Do you need urgent help?
 
-Feel free to ask follow-up questions to better understand their situation and provide comfort. Your primary goal is to ensure they feel safe and to guide them towards seeking further help if needed. Remember to be kind, patient, and supportive throughout the conversation.
+Throughout the conversation, address the person by their name to make it more personal and comforting. Feel free to ask follow-up questions to better understand their situation and provide comfort. Your primary goal is to ensure they feel safe and to guide them towards seeking further help if needed. Remember to be kind, patient, and supportive throughout the conversation.
 Let them know they can hang up the phone after you ask your 3 questions.
 `;
 
@@ -185,6 +185,17 @@ fastify.register(async (fastify) => {
 
                 if (LOG_EVENT_TYPES.includes(response.type)) {
                     console.log(`Received event: ${response.type}`, response);
+                }
+
+                if (response.type === 'response.content.delta' && response.delta) {
+                    // Extract name from the AI's response when it acknowledges the name
+                    if (response.delta.includes('Thank you for sharing your name,')) {
+                        const nameMatch = response.delta.match(/Thank you for sharing your name, (\w+)/i);
+                        if (nameMatch) {
+                            userName = nameMatch[1];
+                            console.log(`User's name extracted: ${userName}`);
+                        }
+                    }
                 }
 
                 if (response.type === 'response.audio.delta' && response.delta) {
