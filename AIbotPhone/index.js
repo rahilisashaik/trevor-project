@@ -7,15 +7,20 @@ import dotenv from 'dotenv';
 import fastifyFormBody from '@fastify/formbody';
 import fastifyWs from '@fastify/websocket';
 import OpenAI from "openai";
+import { createClient } from '@supabase/supabase-js';
 import whisper from 'whisper';  // Using OpenAI Whisper locally
 import { fileURLToPath } from 'url';
 
 dotenv.config();
-const { OPENAI_API_KEY } = process.env;
-if (!OPENAI_API_KEY) {
-    console.error('Missing OpenAI API key. Please set it in the .env file.');
+const { OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY } = process.env;
+
+if (!OPENAI_API_KEY || !SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('Missing required environment variables. Please check your .env file.');
     process.exit(1);
 }
+
+// Initialize Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const fastify = Fastify();
 fastify.register(fastifyFormBody);
@@ -24,7 +29,7 @@ fastify.register(fastifyWs);
 const SYSTEM_MESSAGE = `
 You are an AI agent designed to provide support and comfort to individuals reaching out to a suicide hotline. Your role is to engage in a compassionate and understanding conversation, ensuring the individual feels heard and supported.
 
-First, ask for their name. When they provide their name, respond with exactly this format: "Thank you for sharing your name, [name]. Now, let's talk about how you're feeling." Then proceed with the following questions one at a time in a conversational manner gently and with empathy, but talk with a kind of fast voice and don't talk too slow. Make sure you respond accurately, if they say they're happy then don't say I'm sorry to hear that:
+First, ask for their name. When they provide their name, respond with exactly this format: "Thank you for sharing your name, [name]. Could you please confirm your phone number as well?" When they provide their phone number, respond with exactly this format: "Thank you for confirming your phone number, [name]. Now, let's talk about how you're feeling." Then proceed with the following questions one at a time in a conversational manner gently and with empathy, but talk with a kind of fast voice and don't talk too slow. Make sure you respond accurately, if they say they're happy then don't say I'm sorry to hear that:
 
 1. How are you feeling?
 2. Have you thought about committing suicide lately?
@@ -63,6 +68,138 @@ const convertedAudioFilePath = path.join(audioDir, 'conversation_audio_converted
 
 const openai = new OpenAI(OPENAI_API_KEY);
 
+// Add variable to store user's phone number
+let userPhoneNumber = null;
+
+async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
+    try {
+        // Read the audio file
+        const audioFile = fs.readFileSync(audioFilePath);
+        
+        // Upload audio file to Supabase Storage
+        const { data: audioData, error: audioError } = await supabase.storage
+            .from('call-recordings')
+            .upload(`${Date.now()}_call.wav`, audioFile, {
+                contentType: 'audio/wav'
+            });
+
+        if (audioError) throw audioError;
+
+        // Get the public URL for the audio file
+        const { data: { publicUrl: audioUrl } } = supabase.storage
+            .from('call-recordings')
+            .getPublicUrl(audioData.path);
+
+        const currentTimestamp = new Date().toISOString();
+
+        if (phoneNumber) {
+            // Check if caller exists
+            const { data: existingCaller, error: callerError } = await supabase
+                .from('callers')
+                .select('*')
+                .eq('phone_number', phoneNumber)
+                .single();
+
+            if (callerError && callerError.code !== 'PGRST116') throw callerError;
+
+            if (existingCaller) {
+                // Update existing caller
+                const { error: updateError } = await supabase
+                    .from('callers')
+                    .update({
+                        name: name || existingCaller.name,
+                        aggregated_transcript: existingCaller.aggregated_transcript 
+                            ? `${existingCaller.aggregated_transcript}\n\n--- New Call ${currentTimestamp} ---\n${transcription}`
+                            : transcription,
+                        last_call_timestamp: currentTimestamp,
+                        updated_at: currentTimestamp
+                    })
+                    .eq('phone_number', phoneNumber);
+
+                if (updateError) throw updateError;
+            } else {
+                // Create new caller
+                const { error: insertError } = await supabase
+                    .from('callers')
+                    .insert([
+                        {
+                            phone_number: phoneNumber,
+                            name: name,
+                            aggregated_transcript: transcription,
+                            last_call_timestamp: currentTimestamp
+                        }
+                    ]);
+
+                if (insertError) throw insertError;
+            }
+        }
+
+        // Store individual call record
+        const { error: callError } = await supabase
+            .from('calls')
+            .insert([
+                {
+                    phone_number: phoneNumber,
+                    call_timestamp: currentTimestamp,
+                    audio_url: audioUrl,
+                    transcript: transcription,
+                    duration: Math.floor(audioBuffers.length / 8000) // Approximate duration in seconds
+                }
+            ]);
+
+        if (callError) throw callError;
+
+        console.log('Call data stored successfully in Supabase');
+        return true;
+
+    } catch (error) {
+        console.error('Error storing call data:', error);
+        throw error;
+    }
+}
+
+async function extractUserInfo(transcript) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: `You are a helpful assistant that extracts user information from conversation transcripts. 
+                    Extract the user's name and phone number from the following transcript. 
+                    
+                    For phone numbers:
+                    - Look for numbers in formats like: 510-717-7239, (510) 717-7239, 510.717.7239, or 5107177239
+                    - Remove any spaces, parentheses, or dashes to store in E.164 format (e.g., 5107177239)
+                    - Only extract numbers that look like phone numbers (10 digits)
+                    - If multiple numbers are found, use the one that looks most like a phone number
+                    
+                    Return the information in this exact JSON format:
+                    {
+                        "name": "extracted name or null if not found",
+                        "phone": "extracted phone number in E.164 format or null if not found"
+                    }
+                    Only return the JSON object, nothing else.`
+                },
+                {
+                    role: "user",
+                    content: transcript
+                }
+            ],
+            temperature: 0
+        });
+
+        const response = completion.choices[0].message.content;
+        const userInfo = JSON.parse(response);
+        console.log('Extracted user info:', userInfo);
+        return userInfo;
+
+    } catch (error) {
+        console.error('Error extracting user info:', error);
+        return { name: null, phone: null };
+    }
+}
+
 async function transcribeAudioAndDecideHelp() {
     try {
         console.log("Transcribing audio using OpenAI API...");
@@ -73,12 +210,12 @@ async function transcribeAudioAndDecideHelp() {
 
         await new Promise((resolve, reject) => {
             ffmpeg(rawAudioFilePath)
-                .inputFormat('mulaw')  // Specify the input format
-                .inputOptions('-ar 8000')  // Set the input sample rate to 8000 Hz
-                .audioCodec('pcm_s16le')  // Use PCM signed 16-bit little-endian
+                .inputFormat('mulaw')
+                .inputOptions('-ar 8000')
+                .audioCodec('pcm_s16le')
                 .outputOptions([
-                    '-ar 8000',  // Set the output sample rate to 8000 Hz
-                    '-ac 1'      // Ensure mono-channel
+                    '-ar 8000',
+                    '-ac 1'
                 ])
                 .toFormat('wav')
                 .save(convertedAudioFilePath)
@@ -100,14 +237,15 @@ async function transcribeAudioAndDecideHelp() {
         });
 
         console.log("\nComplete Call Transcript:\n", transcription);
+
+        // Extract user information using GPT-4
+        const { name, phone } = await extractUserInfo(transcription);
         
-        // Save the transcript to a file
-        const transcriptFilePath = path.join(__dirname, 'transcripts', `${Date.now()}_transcript.txt`);
-        fs.writeFileSync(transcriptFilePath, transcription);
-        console.log(`Transcript saved to: ${transcriptFilePath}`);
+        // Store everything in Supabase
+        await storeCallData(transcription, convertedAudioFilePath, name, phone);
 
     } catch (error) {
-        console.error("Error during transcription:", error);
+        console.error("Error during transcription or storage:", error);
     }
 }
 
@@ -178,6 +316,14 @@ fastify.register(async (fastify) => {
                         if (nameMatch) {
                             userName = nameMatch[1];
                             console.log(`User's name extracted: ${userName}`);
+                        }
+                    }
+                    // Extract phone number from the AI's response when it acknowledges the phone number
+                    if (response.delta.includes('Thank you for confirming your phone number,')) {
+                        const phoneMatch = response.delta.match(/Thank you for confirming your phone number, (\w+)/i);
+                        if (phoneMatch) {
+                            userPhoneNumber = phoneMatch[1];
+                            console.log(`User's phone number extracted: ${userPhoneNumber}`);
                         }
                     }
                 }
