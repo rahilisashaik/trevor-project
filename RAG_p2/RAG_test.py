@@ -491,6 +491,20 @@ def run_test():
     print(f"Interactions Percentage Deviation: {final_metrics['avg_interactions_pct_dev']:.2f}%")
     print(f"\nOVERALL ACCURACY SCORE: {final_metrics['accuracy_score']:.2f}%")
     
+    # Save accuracy score to a text file
+    with open("accuracy_score.txt", "w") as f:
+        f.write(f"OVERALL ACCURACY SCORE: {final_metrics['accuracy_score']:.2f}%\n\n")
+        f.write("=== DETAILED METRICS ===\n")
+        f.write(f"Average CPM RMSE: {final_metrics['avg_cpm_rmse']:.2f}\n")
+        f.write(f"Average CPM Percentage Deviation: {final_metrics['avg_cpm_pct_dev']:.2f}%\n")
+        f.write(f"Impressions RMSE: {final_metrics['avg_impressions_rmse']:.2f}\n")
+        f.write(f"Impressions Percentage Deviation: {final_metrics['avg_impressions_pct_dev']:.2f}%\n")
+        f.write(f"Interactions RMSE: {final_metrics['avg_interactions_rmse']:.2f}\n")
+        f.write(f"Interactions Percentage Deviation: {final_metrics['avg_interactions_pct_dev']:.2f}%\n")
+        f.write(f"\nTest completed on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    print("\nAccuracy score saved to 'accuracy_score.txt'")
+    
     # Calculate metrics by category (evergreen vs non-evergreen)
     evergreen_results = [r for r in results if r["is_evergreen"]]
     non_evergreen_results = [r for r in results if not r["is_evergreen"]]
@@ -507,6 +521,15 @@ def run_test():
         print(f"Evergreen Impressions Percentage Deviation: {evergreen_metrics['avg_impressions_pct_dev']:.2f}%")
         print(f"Evergreen Interactions Percentage Deviation: {evergreen_metrics['avg_interactions_pct_dev']:.2f}%")
         print(f"Evergreen Accuracy Score: {evergreen_metrics['accuracy_score']:.2f}%")
+        
+        # Add evergreen metrics to the text file
+        with open("accuracy_score.txt", "a") as f:
+            f.write("\n\n=== EVERGREEN METRICS ===\n")
+            f.write(f"Evergreen test samples: {len(evergreen_results)}\n")
+            f.write(f"Evergreen CPM Percentage Deviation: {evergreen_metrics['avg_cpm_pct_dev']:.2f}%\n")
+            f.write(f"Evergreen Impressions Percentage Deviation: {evergreen_metrics['avg_impressions_pct_dev']:.2f}%\n")
+            f.write(f"Evergreen Interactions Percentage Deviation: {evergreen_metrics['avg_interactions_pct_dev']:.2f}%\n")
+            f.write(f"Evergreen Accuracy Score: {evergreen_metrics['accuracy_score']:.2f}%\n")
     
     # Calculate metrics for non-evergreen
     if non_evergreen_results:
@@ -516,6 +539,15 @@ def run_test():
         print(f"Non-Evergreen Impressions Percentage Deviation: {non_evergreen_metrics['avg_impressions_pct_dev']:.2f}%")
         print(f"Non-Evergreen Interactions Percentage Deviation: {non_evergreen_metrics['avg_interactions_pct_dev']:.2f}%")
         print(f"Non-Evergreen Accuracy Score: {non_evergreen_metrics['accuracy_score']:.2f}%")
+        
+        # Add non-evergreen metrics to the text file
+        with open("accuracy_score.txt", "a") as f:
+            f.write("\n=== NON-EVERGREEN METRICS ===\n")
+            f.write(f"Non-evergreen test samples: {len(non_evergreen_results)}\n")
+            f.write(f"Non-Evergreen CPM Percentage Deviation: {non_evergreen_metrics['avg_cpm_pct_dev']:.2f}%\n")
+            f.write(f"Non-Evergreen Impressions Percentage Deviation: {non_evergreen_metrics['avg_impressions_pct_dev']:.2f}%\n")
+            f.write(f"Non-Evergreen Interactions Percentage Deviation: {non_evergreen_metrics['avg_interactions_pct_dev']:.2f}%\n")
+            f.write(f"Non-Evergreen Accuracy Score: {non_evergreen_metrics['accuracy_score']:.2f}%\n")
     
     # Save results to CSV
     results_df = pd.DataFrame(results)

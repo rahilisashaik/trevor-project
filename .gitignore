@@ -8,8 +8,9 @@
 **/faiss_indexes/
 **/faiss_index/
 **/*.faiss_index
+**/faiss_index_evergreen/
+**/faiss_index_non_evergreen/
 
 # Specific FAISS directories
 **/faiss_index/
 **/faiss_index_testing/
-

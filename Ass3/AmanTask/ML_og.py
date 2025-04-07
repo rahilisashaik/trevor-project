@@ -371,15 +371,20 @@ def plot_results(results):
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
+    # Custom color palette - main color (232, 144, 56) and two shades of gray
+    custom_palette = [(232/255, 144/255, 56/255),   # Main orange
+                      (100/255, 100/255, 100/255),  # Dark gray
+                      (180/255, 180/255, 180/255)]  # Light gray
+    
     # Plot RMSE
-    sns.barplot(x='model_name', y='rmse', hue='target_col', data=results_df, ax=ax1)
+    sns.barplot(x='model_name', y='rmse', hue='target_col', data=results_df, ax=ax1, palette=custom_palette)
     ax1.set_title('RMSE by Model and Target')
     ax1.set_xlabel('Model')
     ax1.set_ylabel('RMSE')
     ax1.tick_params(axis='x', rotation=45)
     
     # Plot Mean Percentage Deviation
-    sns.barplot(x='model_name', y='mean_percentage_deviation', hue='target_col', data=results_df, ax=ax2)
+    sns.barplot(x='model_name', y='mean_percentage_deviation', hue='target_col', data=results_df, ax=ax2, palette=custom_palette)
     ax2.set_title('Mean Percentage Deviation by Model and Target')
     ax2.set_xlabel('Model')
     ax2.set_ylabel('Mean Percentage Deviation (%)')
