@@ -63,33 +63,9 @@ const convertedAudioFilePath = path.join(audioDir, 'conversation_audio_converted
 
 const openai = new OpenAI(OPENAI_API_KEY);
 
-async function decideHelp(conversationTranscript) {
-    try {
-        console.log("\nAnalyzing transcript for suicide status...\n");
-        console.log("conversationTranscript:")
-        console.log(conversationTranscript);
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: SYSTEM_MESSAGE },
-                { role: "user", content: `Here is the transcript of the call:\n\n"${conversationTranscript}"\n\nDoes this person urgently need care? Response simply by saying this person is a SCORE out of ten. Replace SCORE with however dire the circumstances are.` }
-            ],
-            temperature: 0
-        });
-
-        const gptResponse = completion.choices[0].message;
-        console.log("status:")
-        console.log(gptResponse);
-
-    } catch (error) {
-        console.error("Error determining help status:", error);
-    }
-}
-
 async function transcribeAudioAndDecideHelp() {
     try {
-        console.log("Transcribing audio using Whisper...");
+        console.log("Transcribing audio using OpenAI API...");
 
         // Save raw audio
         fs.writeFileSync(rawAudioFilePath, Buffer.concat(audioBuffers));
@@ -112,18 +88,26 @@ async function transcribeAudioAndDecideHelp() {
                 })
                 .on('error', reject);
         });
-        console.log("converted audio file saved, now using whisper to transcribe")
-        const result = await whisper.transcribe({
-            file: convertedAudioFilePath,
-            model: 'base', // Change to 'medium' or 'large' for better accuracy
-            language: 'en'
+
+        console.log("converted audio file saved, now using OpenAI API to transcribe");
+        
+        // Use OpenAI's transcription API
+        const audioFile = fs.createReadStream(convertedAudioFilePath);
+        const transcription = await openai.audio.transcriptions.create({
+            model: "gpt-4o-transcribe",
+            file: audioFile,
+            response_format: "text"
         });
 
-        console.log("\nWhisper Transcript:\n", result.text.trim());
-        decideHelp(result.text.trim());
+        console.log("\nComplete Call Transcript:\n", transcription);
+        
+        // Save the transcript to a file
+        const transcriptFilePath = path.join(__dirname, 'transcripts', `${Date.now()}_transcript.txt`);
+        fs.writeFileSync(transcriptFilePath, transcription);
+        console.log(`Transcript saved to: ${transcriptFilePath}`);
 
     } catch (error) {
-        console.error("Error during transcription or help analysis:", error);
+        console.error("Error during transcription:", error);
     }
 }
 
