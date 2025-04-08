@@ -14,6 +14,7 @@ const formatDate = (dateString: string) => {
 export default function PatientDetails({ caller }: { caller: Caller }) {
   const [calls, setCalls] = useState<Call[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +34,10 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
       }
 
       setCalls(data || []);
+      // Set the most recent call as selected by default
+      if (data && data.length > 0) {
+        setSelectedCall(data[0]);
+      }
     };
 
     if (caller.phone_number) {
@@ -93,11 +98,56 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Conversation Summary</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Conversation Summary</CardTitle>
+            {calls.length > 0 && (
+              <select
+                className="bg-background border rounded-md px-3 py-1 text-sm"
+                value={selectedCall?.id || ''}
+                onChange={(e) => {
+                  const call = calls.find(c => c.id === e.target.value);
+                  setSelectedCall(call || null);
+                }}
+              >
+                {calls.map((call) => (
+                  <option key={call.id} value={call.id}>
+                    {formatDate(call.call_timestamp)} - {formatDuration(call.duration)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="whitespace-pre-wrap">
-            {caller.aggregated_transcript || 'No conversation summary available.'}
+          <div className="space-y-4">
+            {selectedCall?.transcript ? (
+              <div className="space-y-4">
+                {selectedCall.transcript.split('\n').map((line, index) => {
+                  if (line.startsWith('AI:')) {
+                    return (
+                      <div key={index} className="flex justify-start">
+                        <div className="max-w-[80%] bg-[#fc583f] rounded-lg p-3">
+                          <p className="text-sm font-medium text-white">AI</p>
+                          <p className="text-sm text-white">{line.replace('AI:', '').trim()}</p>
+                        </div>
+                      </div>
+                    );
+                  } else if (line.startsWith('User:')) {
+                    return (
+                      <div key={index} className="flex justify-end">
+                        <div className="max-w-[80%] bg-accent rounded-lg p-3">
+                          <p className="text-sm font-medium text-accent-foreground">User</p>
+                          <p className="text-sm">{line.replace('User:', '').trim()}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No conversation summary available.</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -109,7 +159,13 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
         <CardContent>
           <div className="space-y-4">
             {calls.map((call) => (
-              <div key={call.id} className="flex justify-between items-center">
+              <div 
+                key={call.id} 
+                className={`flex justify-between items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                  selectedCall?.id === call.id ? 'bg-accent' : 'hover:bg-accent/50'
+                }`}
+                onClick={() => setSelectedCall(call)}
+              >
                 <span>{formatDate(call.call_timestamp)}</span>
                 <span>Duration: {formatDuration(call.duration)}</span>
               </div>
