@@ -99,7 +99,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Conversation Summary</CardTitle>
+            <CardTitle>Conversation Transcript</CardTitle>
             {calls.length > 0 && (
               <select
                 className="bg-background border rounded-md px-3 py-1 text-sm"
@@ -136,7 +136,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                     return (
                       <div key={index} className="flex justify-end">
                         <div className="max-w-[80%] bg-accent rounded-lg p-3">
-                          <p className="text-sm font-medium text-accent-foreground">User</p>
+                          <p className="text-sm font-medium text-accent-foreground">{caller.name || 'Anonymous'}</p>
                           <p className="text-sm">{line.replace('User:', '').trim()}</p>
                         </div>
                       </div>
