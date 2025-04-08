@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from '@/lib/supabase';
 import type { Caller, Call } from '@/lib/supabase';
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Helper function for consistent date formatting
 const formatDate = (dateString: string) => {
@@ -96,59 +98,101 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Conversation Transcript</CardTitle>
-            {calls.length > 0 && (
-              <select
-                className="bg-background border rounded-md px-3 py-1 text-sm"
-                value={selectedCall?.id || ''}
-                onChange={(e) => {
-                  const call = calls.find(c => c.id === e.target.value);
-                  setSelectedCall(call || null);
-                }}
-              >
-                {calls.map((call) => (
-                  <option key={call.id} value={call.id}>
-                    {formatDate(call.call_timestamp)} - {formatDuration(call.duration)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {selectedCall?.transcript ? (
-              <div className="space-y-4">
-                {selectedCall.transcript.split('\n').map((line, index) => {
-                  if (line.startsWith('AI:')) {
-                    return (
-                      <div key={index} className="flex justify-start">
-                        <div className="max-w-[80%] bg-[#fc583f] rounded-lg p-3">
-                          <p className="text-sm font-medium text-white">AI</p>
-                          <p className="text-sm text-white">{line.replace('AI:', '').trim()}</p>
-                        </div>
-                      </div>
-                    );
-                  } else if (line.startsWith('User:')) {
-                    return (
-                      <div key={index} className="flex justify-end">
-                        <div className="max-w-[80%] bg-accent rounded-lg p-3">
-                          <p className="text-sm font-medium text-accent-foreground">{caller.name || 'Anonymous'}</p>
-                          <p className="text-sm">{line.replace('User:', '').trim()}</p>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+          <CardTitle>Conversation Transcript</CardTitle>
+          <CardDescription>
+            {selectedCall ? (
+              <div className="flex items-center justify-between">
+                <span>Call from {formatDate(selectedCall.call_timestamp)}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Select Call
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {calls.map((call) => (
+                      <DropdownMenuItem
+                        key={call.id}
+                        onClick={() => setSelectedCall(call)}
+                        className={selectedCall?.id === call.id ? 'bg-accent' : ''}
+                      >
+                        {formatDate(call.call_timestamp)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
-              <p className="text-muted-foreground">No conversation summary available.</p>
+              'Select a call to view the transcript'
             )}
-          </div>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {selectedCall?.transcript ? (
+            <div className="space-y-4">
+              {selectedCall.transcript.split('\n').map((line, index) => {
+                if (line.startsWith('AI:')) {
+                  return (
+                    <div key={index} className="flex flex-col items-start">
+                      <span className="text-sm text-white mb-1">AI</span>
+                      <div className="bg-[#fc583f] text-white p-3 rounded-lg max-w-[80%]">
+                        {line.replace('AI:', '').trim()}
+                      </div>
+                    </div>
+                  );
+                } else if (line.startsWith('User:')) {
+                  return (
+                    <div key={index} className="flex flex-col items-end">
+                      <span className="text-sm text-muted-foreground mb-1">{caller.name || 'Anonymous'}</span>
+                      <div className="bg-gray-100 text-gray-900 p-3 rounded-lg max-w-[80%]">
+                        {line.replace('User:', '').trim()}
+                      </div>
+                    </div>
+                  );
+                } else if (line.trim()) {
+                  // Handle any other non-empty lines (like system messages or timestamps)
+                  return (
+                    <div key={index} className="flex justify-center">
+                      <div className="text-sm text-muted-foreground italic">
+                        {line.trim()}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No transcript available for this call</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Conversation Summary</CardTitle>
+          <CardDescription>
+            {selectedCall ? (
+              <span>Summary from {formatDate(selectedCall.call_timestamp)}</span>
+            ) : (
+              'Select a call to view the summary'
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {selectedCall?.summary ? (
+            <div className="prose prose-sm max-w-none">
+              {selectedCall.summary.split('\n').map((paragraph, index) => (
+                <p key={index} className="text-muted-foreground">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No summary available for this call</p>
+          )}
         </CardContent>
       </Card>
 

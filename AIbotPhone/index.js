@@ -71,6 +71,30 @@ const openai = new OpenAI(OPENAI_API_KEY);
 // Add variable to store user's phone number
 let userPhoneNumber = null;
 
+async function generateSummary(transcript) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a helpful assistant that summarizes conversation transcripts."
+                },
+                {
+                    role: "user",
+                    content: `Summarize the following audio transcript in 3–4 sentences. Focus on the main issue discussed, the speaker's emotional state, and any signs of urgency or distress:\n\n${transcript}`
+                }
+            ],
+            temperature: 0
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error generating summary:', error);
+        return null;
+    }
+}
+
 async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
     try {
         // Read the audio file
@@ -92,6 +116,9 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
 
         const currentTimestamp = new Date().toISOString();
 
+        // Generate summary for the current call
+        const summary = await generateSummary(transcription);
+
         if (phoneNumber) {
             // Check if caller exists
             const { data: existingCaller, error: callerError } = await supabase
@@ -111,6 +138,9 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                         aggregated_transcript: existingCaller.aggregated_transcript 
                             ? `${existingCaller.aggregated_transcript}\n\n--- New Call ${currentTimestamp} ---\n${transcription}`
                             : transcription,
+                        aggregated_summary: existingCaller.aggregated_summary
+                            ? `${existingCaller.aggregated_summary}\n\n--- New Call ${currentTimestamp} ---\n${summary}`
+                            : summary,
                         last_call_timestamp: currentTimestamp,
                         updated_at: currentTimestamp
                     })
@@ -126,6 +156,7 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                             phone_number: phoneNumber,
                             name: name,
                             aggregated_transcript: transcription,
+                            aggregated_summary: summary,
                             last_call_timestamp: currentTimestamp
                         }
                     ]);
@@ -143,6 +174,7 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     call_timestamp: currentTimestamp,
                     audio_url: audioUrl,
                     transcript: transcription,
+                    summary: summary,
                     duration: Math.floor(audioBuffers.length / 8000) // Approximate duration in seconds
                 }
             ]);
@@ -200,30 +232,24 @@ async function extractUserInfo(transcript) {
     }
 }
 
-async function processTranscriptWithAIQuestions(transcript) {
+async function processTranscriptWithAIQuestions(transcription) {
     try {
         const completion = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [
                 {
                     role: "system",
-                    content: `You are a helpful assistant that formats conversation transcripts. 
-                    Format the transcript to include the AI's questions in a user/AI format.
-                    The AI always asks these questions in order:
-                    1. How are you feeling?
-                    2. Have you thought about committing suicide lately?
-                    3. Do you need urgent help?
-                    
-                    Format the transcript like this:
-                    AI: [Question]
-                    User: [Response]
-                    
-                    If the user's response to a question is not clear, make a best guess based on the context.
-                    Only include the actual conversation content, no additional commentary.`
+                    content: "You are formatting a conversation transcript. Format the conversation as a dialogue between AI and User, ensuring the AI's standard questions are included in order. Format each line with 'AI:' or 'User:' prefix."
                 },
                 {
                     role: "user",
-                    content: transcript
+                    content: `Format this transcript as a dialogue, including these AI questions in order:
+                    1. "How are you feeling?"
+                    2. "Have you thought about committing suicide lately?"
+                    3. "Do you need urgent help?"
+                    
+                    Original transcript:
+                    ${transcription}`
                 }
             ],
             temperature: 0
@@ -232,7 +258,7 @@ async function processTranscriptWithAIQuestions(transcript) {
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('Error processing transcript:', error);
-        return transcript;
+        return transcription;
     }
 }
 
