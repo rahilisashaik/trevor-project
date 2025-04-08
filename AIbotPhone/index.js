@@ -200,6 +200,42 @@ async function extractUserInfo(transcript) {
     }
 }
 
+async function processTranscriptWithAIQuestions(transcript) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: `You are a helpful assistant that formats conversation transcripts. 
+                    Format the transcript to include the AI's questions in a user/AI format.
+                    The AI always asks these questions in order:
+                    1. How are you feeling?
+                    2. Have you thought about committing suicide lately?
+                    3. Do you need urgent help?
+                    
+                    Format the transcript like this:
+                    AI: [Question]
+                    User: [Response]
+                    
+                    If the user's response to a question is not clear, make a best guess based on the context.
+                    Only include the actual conversation content, no additional commentary.`
+                },
+                {
+                    role: "user",
+                    content: transcript
+                }
+            ],
+            temperature: 0
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error processing transcript:', error);
+        return transcript;
+    }
+}
+
 async function transcribeAudioAndDecideHelp() {
     try {
         console.log("Transcribing audio using OpenAI API...");
@@ -241,11 +277,12 @@ async function transcribeAudioAndDecideHelp() {
         // Extract user information using GPT-4
         const { name, phone } = await extractUserInfo(transcription);
         
-        // Store everything in Supabase
-        await storeCallData(transcription, convertedAudioFilePath, name, phone);
+        // Return the transcription and user info
+        return { transcription, name, phone };
 
     } catch (error) {
         console.error("Error during transcription or storage:", error);
+        return { transcription: null, name: null, phone: null };
     }
 }
 
@@ -382,9 +419,13 @@ fastify.register(async (fastify) => {
         connection.on('close', async () => {
             console.log('Client disconnected.');
 
-            
             if (audioBuffers.length > 0) {
-                await transcribeAudioAndDecideHelp();
+                const { transcription, name, phone } = await transcribeAudioAndDecideHelp();
+                if (transcription) {
+                    const formattedTranscript = await processTranscriptWithAIQuestions(transcription);
+                    // Store the formatted transcript instead of the raw one
+                    await storeCallData(formattedTranscript, convertedAudioFilePath, name, phone);
+                }
             } else {
                 console.error('No audio recorded');
             }
