@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import type { Caller, Call } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import EmotionRadarChart from './EmotionRadarChart';
 
 // Helper function for consistent date formatting
 const formatDate = (dateString: string) => {
@@ -192,6 +193,26 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
             </div>
           ) : (
             <p className="text-muted-foreground">No summary available for this call</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Emotion Analysis</CardTitle>
+          <CardDescription>
+            {selectedCall ? (
+              <span>Emotional state from {formatDate(selectedCall.call_timestamp)}</span>
+            ) : (
+              'Select a call to view emotion analysis'
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {selectedCall?.emotion_scores ? (
+            <EmotionRadarChart emotionScores={selectedCall.emotion_scores} />
+          ) : (
+            <p className="text-muted-foreground">No emotion analysis available for this call</p>
           )}
         </CardContent>
       </Card>

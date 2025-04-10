@@ -10,6 +10,7 @@ import OpenAI from "openai";
 import { createClient } from '@supabase/supabase-js';
 import whisper from 'whisper';  // Using OpenAI Whisper locally
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 dotenv.config();
 const { OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY } = process.env;
@@ -95,6 +96,37 @@ async function generateSummary(transcript) {
     }
 }
 
+async function analyzeSpeechEmotion(audioFilePath) {
+    return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', ['sentiment_analysis.py', audioFilePath]);
+        let result = '';
+        let error = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            result += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            error += data.toString();
+        });
+
+        pythonProcess.on('close', (code) => {
+            if (code !== 0) {
+                console.error('Error in speech emotion analysis:', error);
+                resolve(null);
+                return;
+            }
+            try {
+                const emotionScores = JSON.parse(result);
+                resolve(emotionScores);
+            } catch (e) {
+                console.error('Error parsing emotion scores:', e);
+                resolve(null);
+            }
+        });
+    });
+}
+
 async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
     try {
         // Read the audio file
@@ -118,6 +150,9 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
 
         // Generate summary for the current call
         const summary = await generateSummary(transcription);
+
+        // Analyze speech emotion
+        const emotionScores = await analyzeSpeechEmotion(audioFilePath);
 
         if (phoneNumber) {
             // Check if caller exists
@@ -175,7 +210,8 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     audio_url: audioUrl,
                     transcript: transcription,
                     summary: summary,
-                    duration: Math.floor(audioBuffers.length / 8000) // Approximate duration in seconds
+                    duration: Math.floor(audioBuffers.length / 8000), // Approximate duration in seconds
+                    emotion_scores: emotionScores // Add emotion scores to the call record
                 }
             ]);
 
@@ -303,8 +339,14 @@ async function transcribeAudioAndDecideHelp() {
         // Extract user information using GPT-4
         const { name, phone } = await extractUserInfo(transcription);
         
+        // Process the transcript with AI questions
+        const formattedTranscript = await processTranscriptWithAIQuestions(transcription);
+        
+        // Store the call data
+        await storeCallData(formattedTranscript, convertedAudioFilePath, name, phone);
+        
         // Return the transcription and user info
-        return { transcription, name, phone };
+        return { transcription: formattedTranscript, name, phone };
 
     } catch (error) {
         console.error("Error during transcription or storage:", error);
