@@ -112,15 +112,15 @@ async function analyzeSpeechEmotion(audioFilePath) {
 
         pythonProcess.on('close', (code) => {
             if (code !== 0) {
-                console.error('Error in speech emotion analysis:', error);
+                console.error('Error in sentiment analysis:', error);
                 resolve(null);
                 return;
             }
             try {
-                const emotionScores = JSON.parse(result);
-                resolve(emotionScores);
+                const analysisResult = JSON.parse(result);
+                resolve(analysisResult);
             } catch (e) {
-                console.error('Error parsing emotion scores:', e);
+                console.error('Error parsing sentiment analysis:', e);
                 resolve(null);
             }
         });
@@ -151,8 +151,10 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
         // Generate summary for the current call
         const summary = await generateSummary(transcription);
 
-        // Analyze speech emotion
-        const emotionScores = await analyzeSpeechEmotion(audioFilePath);
+        // Analyze speech emotion and sentiment
+        const analysisResult = await analyzeSpeechEmotion(audioFilePath);
+        const emotionScores = analysisResult?.emotion_scores || null;
+        const sentimentTimeSeries = analysisResult?.sentiment_time_series || null;
 
         if (phoneNumber) {
             // Check if caller exists
@@ -211,7 +213,8 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     transcript: transcription,
                     summary: summary,
                     duration: Math.floor(audioBuffers.length / 8000), // Approximate duration in seconds
-                    emotion_scores: emotionScores // Add emotion scores to the call record
+                    emotion_scores: emotionScores,
+                    sentiment_time_series: sentimentTimeSeries
                 }
             ]);
 

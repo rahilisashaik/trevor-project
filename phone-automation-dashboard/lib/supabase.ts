@@ -21,9 +21,15 @@ export type Call = {
   call_timestamp: string;
   audio_url: string;
   transcript: string;
+  summary: string;
   duration: number;
-  sentiment?: {
-    score: number;
-    labels: string[];
+  emotion_scores: {
+    [key: string]: number;
   };
-}; 
+  sentiment_time_series: Array<{
+    timestamp: number;
+    score: number;
+    rms: number;
+    zcr: number;
+  }>;
+};

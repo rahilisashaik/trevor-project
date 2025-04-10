@@ -4,13 +4,7 @@ import { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 
 interface EmotionScores {
-  happy: number;
-  fearful: number;
-  sad: number;
-  surprised: number;
-  neutral: number;
-  angry: number;
-  disgust: number;
+  [key: string]: number;
 }
 
 interface EmotionRadarChartProps {
