@@ -17,46 +17,51 @@ const formatDate = (dateString: string) => {
 
 export default function PatientDetails({ caller }: { caller: Caller }) {
   const [calls, setCalls] = useState<Call[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const fetchCallerData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Fetch all calls for this caller
+        const { data: callsData, error: callsError } = await supabase
+          .from('calls')
+          .select('*')
+          .eq('phone_number', caller.phone_number)
+          .order('call_timestamp', { ascending: false });
 
-  useEffect(() => {
-    const fetchCalls = async () => {
-      const { data, error } = await supabase
-        .from('calls')
-        .select('*')
-        .eq('phone_number', caller.phone_number)
-        .order('call_timestamp', { ascending: false });
+        if (callsError) throw new Error(callsError.message);
 
-      if (error) {
-        console.error('Error fetching calls:', error);
-        return;
-      }
+        // Deduplicate calls based on call_timestamp
+        const uniqueCalls = callsData?.reduce((acc: Call[], current) => {
+          const exists = acc.find(call => call.call_timestamp === current.call_timestamp);
+          if (!exists) {
+            acc.push(current);
+          }
+          return acc;
+        }, []) || [];
 
-      // Deduplicate calls based on call_timestamp
-      const uniqueCalls = data?.reduce((acc: Call[], current) => {
-        const exists = acc.find(call => call.call_timestamp === current.call_timestamp);
-        if (!exists) {
-          acc.push(current);
+        setCalls(uniqueCalls);
+        
+        // Set the most recent call as selected by default
+        if (uniqueCalls.length > 0) {
+          setSelectedCall(uniqueCalls[0]);
         }
-        return acc;
-      }, []) || [];
 
-      setCalls(uniqueCalls);
-      // Set the most recent call as selected by default
-      if (uniqueCalls.length > 0 && !selectedCall) {
-        setSelectedCall(uniqueCalls[0]);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
+        setIsLoading(false);
       }
     };
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     if (caller.phone_number) {
-      fetchCalls();
+      fetchCallerData();
 
       // Create a single subscription
       channel = supabase
@@ -68,28 +73,24 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
           filter: `phone_number=eq.${caller.phone_number}`
         }, (payload) => {
           console.log('New call inserted:', payload);
-          // Instead of refetching, update the state directly
           const newCall = payload.new as Call;
           setCalls(prevCalls => {
-            // Check if call already exists
             if (prevCalls.some(call => call.call_timestamp === newCall.call_timestamp)) {
               return prevCalls;
             }
             return [newCall, ...prevCalls];
           });
-          // Update selected call if none is selected
           setSelectedCall(current => current || newCall);
         })
         .subscribe();
     }
 
-    // Cleanup subscription
     return () => {
       if (channel) {
         channel.unsubscribe();
       }
     };
-  }, [caller.phone_number]); // Remove selectedCall from dependencies
+  }, [caller.phone_number]);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -129,24 +130,74 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
     return filteredLines.join('\n');
   };
 
-  // Don't render anything until after client-side hydration
-  if (!mounted) {
-    return <div className="grid gap-6">
+  // Loading state UI
+  if (isLoading) {
+    return (
+      <div className="grid gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-6">
+              <div className="w-32 h-32 rounded-full bg-primary/10 animate-pulse" />
+              <div className="space-y-4 flex-1">
+                <div className="h-8 bg-primary/10 rounded animate-pulse w-1/3" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-primary/10 rounded animate-pulse" />
+                  <div className="h-4 bg-primary/10 rounded animate-pulse" />
+                  <div className="h-4 bg-primary/10 rounded animate-pulse" />
+                  <div className="h-4 bg-primary/10 rounded animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-[200px] bg-primary/10 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+          <Card className="col-span-2">
+            <CardContent className="p-6">
+              <div className="h-[200px] bg-primary/10 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="h-20 bg-primary/10 rounded animate-pulse" />
+              <div className="h-20 bg-primary/10 rounded animate-pulse" />
+              <div className="h-20 bg-primary/10 rounded animate-pulse" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state UI
+  if (error) {
+    return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-6xl font-bold">...</span>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold">Loading...</h3>
-            </div>
+          <div className="text-center space-y-4">
+            <div className="text-red-500 text-xl">Error Loading Data</div>
+            <p className="text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+            >
+              Try Again
+            </Button>
           </div>
         </CardContent>
       </Card>
-    </div>;
+    );
   }
 
+  // Main content UI (only shown when data is loaded)
   return (
     <div className="grid gap-6">
       <div className="grid grid-cols-3 gap-6">
