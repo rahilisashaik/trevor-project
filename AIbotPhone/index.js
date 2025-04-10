@@ -10,6 +10,7 @@ import OpenAI from "openai";
 import { createClient } from '@supabase/supabase-js';
 import whisper from 'whisper';  // Using OpenAI Whisper locally
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 dotenv.config();
 const { OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY } = process.env;
@@ -71,6 +72,61 @@ const openai = new OpenAI(OPENAI_API_KEY);
 // Add variable to store user's phone number
 let userPhoneNumber = null;
 
+async function generateSummary(transcript) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are summarizing conversation transcripts in a way that focuses on the caller's responses and emotional state. Do not mention the AI or the questions asked - instead describe what the caller expressed or revealed in response to questions about their feelings, thoughts of suicide, and need for help. Use natural, flowing language that centers the caller's experience."
+                },
+                {
+                    role: "user",
+                    content: `Summarize the following conversation transcript in 3-4 sentences, focusing only on what the caller expressed or revealed about their feelings, thoughts of suicide, and need for help. Use language like 'The caller expressed/felt/revealed...' and avoid mentioning the AI or questions asked:\n\n${transcript}`
+                }
+            ],
+            temperature: 0
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error generating summary:', error);
+        return null;
+    }
+}
+
+async function analyzeSpeechEmotion(audioFilePath) {
+    return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', ['sentiment_analysis.py', audioFilePath]);
+        let result = '';
+        let error = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            result += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            error += data.toString();
+        });
+
+        pythonProcess.on('close', (code) => {
+            if (code !== 0) {
+                console.error('Error in speech emotion analysis:', error);
+                resolve(null);
+                return;
+            }
+            try {
+                const emotionScores = JSON.parse(result);
+                resolve(emotionScores);
+            } catch (e) {
+                console.error('Error parsing emotion scores:', e);
+                resolve(null);
+            }
+        });
+    });
+}
+
 async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
     try {
         // Read the audio file
@@ -92,6 +148,12 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
 
         const currentTimestamp = new Date().toISOString();
 
+        // Generate summary for the current call
+        const summary = await generateSummary(transcription);
+
+        // Analyze speech emotion
+        const emotionScores = await analyzeSpeechEmotion(audioFilePath);
+
         if (phoneNumber) {
             // Check if caller exists
             const { data: existingCaller, error: callerError } = await supabase
@@ -111,6 +173,9 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                         aggregated_transcript: existingCaller.aggregated_transcript 
                             ? `${existingCaller.aggregated_transcript}\n\n--- New Call ${currentTimestamp} ---\n${transcription}`
                             : transcription,
+                        aggregated_summary: existingCaller.aggregated_summary
+                            ? `${existingCaller.aggregated_summary}\n\n--- New Call ${currentTimestamp} ---\n${summary}`
+                            : summary,
                         last_call_timestamp: currentTimestamp,
                         updated_at: currentTimestamp
                     })
@@ -126,6 +191,7 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                             phone_number: phoneNumber,
                             name: name,
                             aggregated_transcript: transcription,
+                            aggregated_summary: summary,
                             last_call_timestamp: currentTimestamp
                         }
                     ]);
@@ -143,7 +209,9 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     call_timestamp: currentTimestamp,
                     audio_url: audioUrl,
                     transcript: transcription,
-                    duration: Math.floor(audioBuffers.length / 8000) // Approximate duration in seconds
+                    summary: summary,
+                    duration: Math.floor(audioBuffers.length / 8000), // Approximate duration in seconds
+                    emotion_scores: emotionScores // Add emotion scores to the call record
                 }
             ]);
 
@@ -200,6 +268,36 @@ async function extractUserInfo(transcript) {
     }
 }
 
+async function processTranscriptWithAIQuestions(transcription) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are formatting a conversation transcript. Format the conversation as a dialogue between AI and User, ensuring the AI's standard questions are included in order. Format each line with 'AI:' or 'User:' prefix."
+                },
+                {
+                    role: "user",
+                    content: `Format this transcript as a dialogue, including these AI questions in order:
+                    1. "How are you feeling?"
+                    2. "Have you thought about committing suicide lately?"
+                    3. "Do you need urgent help?"
+                    
+                    Original transcript:
+                    ${transcription}`
+                }
+            ],
+            temperature: 0
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error processing transcript:', error);
+        return transcription;
+    }
+}
+
 async function transcribeAudioAndDecideHelp() {
     try {
         console.log("Transcribing audio using OpenAI API...");
@@ -241,11 +339,18 @@ async function transcribeAudioAndDecideHelp() {
         // Extract user information using GPT-4
         const { name, phone } = await extractUserInfo(transcription);
         
-        // Store everything in Supabase
-        await storeCallData(transcription, convertedAudioFilePath, name, phone);
+        // Process the transcript with AI questions
+        const formattedTranscript = await processTranscriptWithAIQuestions(transcription);
+        
+        // Store the call data
+        await storeCallData(formattedTranscript, convertedAudioFilePath, name, phone);
+        
+        // Return the transcription and user info
+        return { transcription: formattedTranscript, name, phone };
 
     } catch (error) {
         console.error("Error during transcription or storage:", error);
+        return { transcription: null, name: null, phone: null };
     }
 }
 
@@ -382,9 +487,13 @@ fastify.register(async (fastify) => {
         connection.on('close', async () => {
             console.log('Client disconnected.');
 
-            
             if (audioBuffers.length > 0) {
-                await transcribeAudioAndDecideHelp();
+                const { transcription, name, phone } = await transcribeAudioAndDecideHelp();
+                if (transcription) {
+                    const formattedTranscript = await processTranscriptWithAIQuestions(transcription);
+                    // Store the formatted transcript instead of the raw one
+                    await storeCallData(formattedTranscript, convertedAudioFilePath, name, phone);
+                }
             } else {
                 console.error('No audio recorded');
             }

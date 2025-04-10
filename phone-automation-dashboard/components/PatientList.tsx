@@ -7,6 +7,11 @@ import type { Caller } from '@/lib/supabase';
 export default function PatientList({ onSelect }: { onSelect: (caller: Caller) => void }) {
   const [callers, setCallers] = useState<Caller[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchCallers = async () => {
@@ -31,26 +36,45 @@ export default function PatientList({ onSelect }: { onSelect: (caller: Caller) =
       }
     };
 
-    fetchCallers();
+    if (mounted) {
+      fetchCallers();
 
-    // Subscribe to all changes in the callers table
-    const channel = supabase
-      .channel('callers_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'callers'
-      }, (payload) => {
-        console.log('Caller change received!', payload);
-        fetchCallers(); // Refetch callers when there's an update
-      })
-      .subscribe();
+      // Subscribe to all changes in the callers table
+      const channel = supabase
+        .channel('callers_changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'callers'
+        }, (payload) => {
+          console.log('Caller change received!', payload);
+          fetchCallers(); // Refetch callers when there's an update
+        })
+        .subscribe();
 
-    // Cleanup subscription
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [selectedId, onSelect]);
+      // Cleanup subscription
+      return () => {
+        channel.unsubscribe();
+      };
+    }
+  }, [selectedId, onSelect, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="p-3 rounded-lg animate-pulse bg-accent/20"
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Loading...</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
