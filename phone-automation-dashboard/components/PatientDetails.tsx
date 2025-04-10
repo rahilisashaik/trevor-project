@@ -37,36 +37,59 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
         return;
       }
 
-      setCalls(data || []);
+      // Deduplicate calls based on call_timestamp
+      const uniqueCalls = data?.reduce((acc: Call[], current) => {
+        const exists = acc.find(call => call.call_timestamp === current.call_timestamp);
+        if (!exists) {
+          acc.push(current);
+        }
+        return acc;
+      }, []) || [];
+
+      setCalls(uniqueCalls);
       // Set the most recent call as selected by default
-      if (data && data.length > 0) {
-        setSelectedCall(data[0]);
+      if (uniqueCalls.length > 0 && !selectedCall) {
+        setSelectedCall(uniqueCalls[0]);
       }
     };
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     if (caller.phone_number) {
       fetchCalls();
 
-      // Subscribe to changes in the calls table for this caller
-      const channel = supabase
+      // Create a single subscription
+      channel = supabase
         .channel(`calls_${caller.phone_number}`)
         .on('postgres_changes', {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'calls',
           filter: `phone_number=eq.${caller.phone_number}`
         }, (payload) => {
-          console.log('Call change received!', payload);
-          fetchCalls(); // Refetch calls when there's an update
+          console.log('New call inserted:', payload);
+          // Instead of refetching, update the state directly
+          const newCall = payload.new as Call;
+          setCalls(prevCalls => {
+            // Check if call already exists
+            if (prevCalls.some(call => call.call_timestamp === newCall.call_timestamp)) {
+              return prevCalls;
+            }
+            return [newCall, ...prevCalls];
+          });
+          // Update selected call if none is selected
+          setSelectedCall(current => current || newCall);
         })
         .subscribe();
-
-      // Cleanup subscription when component unmounts or caller changes
-      return () => {
-        channel.unsubscribe();
-      };
     }
-  }, [caller.phone_number]);
+
+    // Cleanup subscription
+    return () => {
+      if (channel) {
+        channel.unsubscribe();
+      }
+    };
+  }, [caller.phone_number]); // Remove selectedCall from dependencies
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
