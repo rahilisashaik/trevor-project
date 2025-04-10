@@ -73,9 +73,54 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Add function to filter transcript for key questions
+  const filterKeyQuestions = (transcript: string) => {
+    const lines = transcript.split('\n');
+    const keyQuestions = [
+      'How are you feeling?',
+      'Have you thought about committing suicide lately?',
+      'Do you need urgent help?'
+    ];
+    
+    let filteredLines: string[] = [];
+    let foundQuestions = new Set<string>();
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('AI:')) {
+        const aiMessage = line.replace('AI:', '').trim();
+        // Check if this is one of our key questions
+        const matchingQuestion = keyQuestions.find(q => aiMessage.includes(q));
+        if (matchingQuestion && !foundQuestions.has(matchingQuestion)) {
+          foundQuestions.add(matchingQuestion);
+          filteredLines.push(line);
+          // Add the next user response if it exists
+          if (i + 1 < lines.length && lines[i + 1].startsWith('User:')) {
+            filteredLines.push(lines[i + 1]);
+          }
+        }
+      }
+    }
+    
+    return filteredLines.join('\n');
+  };
+
   // Don't render anything until after client-side hydration
   if (!mounted) {
-    return null;
+    return <div className="grid gap-6">
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-6">
+            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-6xl font-bold">...</span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold">Loading...</h3>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>;
   }
 
   return (
@@ -101,7 +146,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Conversation Transcript</CardTitle>
+          <CardTitle>Key Questions & Responses</CardTitle>
           <CardDescription>
             {selectedCall ? (
               <div className="flex items-center justify-between">
@@ -126,14 +171,14 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                 </DropdownMenu>
               </div>
             ) : (
-              'Select a call to view the transcript'
+              'Select a call to view the responses'
             )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {selectedCall?.transcript ? (
             <div className="space-y-4">
-              {selectedCall.transcript.split('\n').map((line, index) => {
+              {filterKeyQuestions(selectedCall.transcript).split('\n').map((line, index) => {
                 if (line.startsWith('AI:')) {
                   return (
                     <div key={index} className="flex flex-col items-start">
@@ -149,15 +194,6 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                       <span className="text-sm text-muted-foreground mb-1">{caller.name || 'Anonymous'}</span>
                       <div className="bg-gray-100 text-gray-900 p-3 rounded-lg max-w-[80%]">
                         {line.replace('User:', '').trim()}
-                      </div>
-                    </div>
-                  );
-                } else if (line.trim()) {
-                  // Handle any other non-empty lines (like system messages or timestamps)
-                  return (
-                    <div key={index} className="flex justify-center">
-                      <div className="text-sm text-muted-foreground italic">
-                        {line.trim()}
                       </div>
                     </div>
                   );

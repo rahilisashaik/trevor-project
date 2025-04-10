@@ -79,11 +79,11 @@ async function generateSummary(transcript) {
             messages: [
                 {
                     role: "system",
-                    content: "You are a helpful assistant that summarizes conversation transcripts."
+                    content: "You are summarizing conversation transcripts in a way that focuses on the caller's responses and emotional state. Do not mention the AI or the questions asked - instead describe what the caller expressed or revealed in response to questions about their feelings, thoughts of suicide, and need for help. Use natural, flowing language that centers the caller's experience."
                 },
                 {
                     role: "user",
-                    content: `Summarize the following audio transcript in 3–4 sentences. Focus on the main issue discussed, the speaker's emotional state, and any signs of urgency or distress:\n\n${transcript}`
+                    content: `Summarize the following conversation transcript in 3-4 sentences, focusing only on what the caller expressed or revealed about their feelings, thoughts of suicide, and need for help. Use language like 'The caller expressed/felt/revealed...' and avoid mentioning the AI or questions asked:\n\n${transcript}`
                 }
             ],
             temperature: 0
