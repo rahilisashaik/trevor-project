@@ -29,10 +29,6 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Overview</h2>
-          </div>
-
           {selectedCaller ? (
             <PatientDetails caller={selectedCaller} />
           ) : (

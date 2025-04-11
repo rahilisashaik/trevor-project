@@ -214,8 +214,28 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
               <div className={`w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold ${selectedCall ? getUrgencyColor(selectedCall.urgency_score) : 'bg-gray-300'}`}>
                 {selectedCall ? selectedCall.urgency_score : '?'}
               </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">{caller.name || 'Anonymous'}</h3>
+              <div className="space-y-2 flex-1">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-2xl font-bold">{caller.name || 'Anonymous'}</h3>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Select Call
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {calls.map((call) => (
+                        <DropdownMenuItem
+                          key={call.id}
+                          onClick={() => setSelectedCall(call)}
+                          className={selectedCall?.id === call.id ? 'bg-accent' : ''}
+                        >
+                          {formatDate(call.call_timestamp)}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <div className="space-y-1">
                   <p><span className="font-medium">Phone Number:</span> {caller.phone_number}</p>
                   <p><span className="font-medium">Last Contacted:</span> {formatDate(caller.last_call_timestamp)}</p>
@@ -309,27 +329,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
           <CardTitle>Key Questions & Responses</CardTitle>
           <CardDescription>
             {selectedCall ? (
-              <div className="flex items-center justify-between">
-                <span>Call from {formatDate(selectedCall.call_timestamp)}</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Select Call
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {calls.map((call) => (
-                      <DropdownMenuItem
-                        key={call.id}
-                        onClick={() => setSelectedCall(call)}
-                        className={selectedCall?.id === call.id ? 'bg-accent' : ''}
-                      >
-                        {formatDate(call.call_timestamp)}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <span>Call from {formatDate(selectedCall.call_timestamp)}</span>
             ) : (
               'Select a call to view the responses'
             )}
