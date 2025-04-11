@@ -31,11 +31,6 @@ export default function Home() {
         <div className="flex-1 p-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">Overview</h2>
-            <div className="flex gap-4">
-              <Button variant="outline">Filter</Button>
-              <Button variant="outline">Customize</Button>
-              <Button>Export</Button>
-            </div>
           </div>
 
           {selectedCaller ? (
