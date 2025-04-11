@@ -543,12 +543,10 @@ fastify.register(async (fastify) => {
             if (audioBuffers.length > 0) {
                 const { transcription, name, phone } = await transcribeAudioAndDecideHelp();
                 if (transcription) {
-                    const formattedTranscript = await processTranscriptWithAIQuestions(transcription);
-                    // Store the formatted transcript instead of the raw one
-                    await storeCallData(formattedTranscript, convertedAudioFilePath, name, phone);
+                    console.log('\n\nFull Conversation Transcript:\n', transcription);
+                } else {
+                    console.error('No audio recorded');
                 }
-            } else {
-                console.error('No audio recorded');
             }
 
             if (openAiWs.readyState === WebSocket.OPEN) openAiWs.close();
