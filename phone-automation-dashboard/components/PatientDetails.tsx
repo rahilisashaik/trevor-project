@@ -12,7 +12,14 @@ import SentimentTimeSeriesChart from './SentimentTimeSeriesChart';
 // Helper function for consistent date formatting
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
 };
 
 export default function PatientDetails({ caller }: { caller: Caller }) {
