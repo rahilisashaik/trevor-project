@@ -32,4 +32,5 @@ export type Call = {
     rms: number;
     zcr: number;
   }>;
+  urgency_score: number;
 };

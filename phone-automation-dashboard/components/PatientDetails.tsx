@@ -130,6 +130,13 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
     return filteredLines.join('\n');
   };
 
+  const getUrgencyColor = (score: number) => {
+    if (score >= 8) return 'bg-red-500';
+    if (score >= 5) return 'bg-orange-500';
+    if (score >= 3) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
   // Loading state UI
   if (isLoading) {
     return (
@@ -199,13 +206,13 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
 
   // Main content UI (only shown when data is loaded)
   return (
-    <div className="grid gap-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-3 gap-6">
         <Card className="col-span-2">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
-              <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-6xl font-bold">{caller.urgency || '?'}</span>
+              <div className={`w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold ${selectedCall ? getUrgencyColor(selectedCall.urgency_score) : 'bg-gray-300'}`}>
+                {selectedCall ? selectedCall.urgency_score : '?'}
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">{caller.name || 'Anonymous'}</h3>
@@ -214,6 +221,14 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                   <p><span className="font-medium">Last Contacted:</span> {formatDate(caller.last_call_timestamp)}</p>
                   <p><span className="font-medium">Previous History:</span> {caller.previous_history || 'None'}</p>
                   <p><span className="font-medium">Sexual Orientation:</span> {caller.sexual_orientation || 'Not specified'}</p>
+                  {selectedCall && (
+                    <p><span className="font-medium">Risk Level:</span> {
+                      selectedCall.urgency_score >= 8 ? 'Critical - Immediate intervention needed' :
+                      selectedCall.urgency_score >= 5 ? 'High Risk - Needs urgent attention' :
+                      selectedCall.urgency_score >= 3 ? 'Moderate Risk - Monitor closely' :
+                      'Low Risk - Stable but needs support'
+                    }</p>
+                  )}
                 </div>
               </div>
             </div>
