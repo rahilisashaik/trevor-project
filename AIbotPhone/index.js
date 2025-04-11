@@ -127,6 +127,48 @@ async function analyzeSpeechEmotion(audioFilePath) {
     });
 }
 
+async function calculateUrgencyScore(transcript, emotionScores, sentimentTimeSeries) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: `You are analyzing suicide hotline call data to determine an urgency score from 1-10.
+                    Rules for scoring:
+                    - Score of 10: Immediate intervention needed, clear immediate suicide risk
+                    - Score of 8-9: High risk, in desparate need of help/support, has specific suicide plans or strong ideation
+                    - Score of 5-7: Moderate risk, struggling a lot or considered suicide or needs urgent help
+                    - Score of 3-4: Lower risk, struggling but no immediate danger
+                    - Score of 1-2: Minimal risk, seeking support but relatively stable
+                    
+                    Consider:
+                    1. Presence of suicidal thoughts/plans
+                    2. Request for immediate help
+                    3. Emotional state (from emotion scores)
+                    4. Sentiment progression (from time series)
+                    
+                    Return only an integer between 1-10.`
+                },
+                {
+                    role: "user",
+                    content: `Analyze this data and return an urgency score:
+                    Transcript: ${transcript}
+                    Emotion Scores: ${JSON.stringify(emotionScores)}
+                    Sentiment Time Series: ${JSON.stringify(sentimentTimeSeries)}`
+                }
+            ],
+            temperature: 0
+        });
+
+        const urgencyScore = parseInt(completion.choices[0].message.content);
+        return isNaN(urgencyScore) ? 5 : urgencyScore; // Default to 5 if parsing fails
+    } catch (error) {
+        console.error('Error calculating urgency score:', error);
+        return 5; // Default score on error
+    }
+}
+
 async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
     try {
         // Read the audio file
@@ -155,6 +197,13 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
         const analysisResult = await analyzeSpeechEmotion(audioFilePath);
         const emotionScores = analysisResult?.emotion_scores || null;
         const sentimentTimeSeries = analysisResult?.sentiment_time_series || null;
+
+        // Calculate urgency score
+        const urgencyScore = await calculateUrgencyScore(
+            transcription, 
+            emotionScores, 
+            sentimentTimeSeries
+        );
 
         if (phoneNumber) {
             // Check if caller exists
@@ -214,7 +263,8 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     summary: summary,
                     duration: Math.floor(audioBuffers.length / 8000), // Approximate duration in seconds
                     emotion_scores: emotionScores,
-                    sentiment_time_series: sentimentTimeSeries
+                    sentiment_time_series: sentimentTimeSeries,
+                    urgency_score: urgencyScore
                 }
             ]);
 
