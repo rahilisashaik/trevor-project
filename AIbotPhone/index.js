@@ -171,6 +171,18 @@ async function calculateUrgencyScore(transcript, emotionScores, sentimentTimeSer
 
 async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
     try {
+        // Get the duration of the audio file using ffmpeg
+        const duration = await new Promise((resolve, reject) => {
+            ffmpeg.ffprobe(audioFilePath, (err, metadata) => {
+                if (err) {
+                    console.error('Error getting audio duration:', err);
+                    reject(err);
+                } else {
+                    resolve(Math.floor(metadata.format.duration));
+                }
+            });
+        });
+
         // Read the audio file
         const audioFile = fs.readFileSync(audioFilePath);
         
@@ -261,7 +273,7 @@ async function storeCallData(transcription, audioFilePath, name, phoneNumber) {
                     audio_url: audioUrl,
                     transcript: transcription,
                     summary: summary,
-                    duration: Math.floor(audioBuffers.length / 8000), // Approximate duration in seconds
+                    duration: duration, // Use the actual duration from ffprobe
                     emotion_scores: emotionScores,
                     sentiment_time_series: sentimentTimeSeries,
                     urgency_score: urgencyScore

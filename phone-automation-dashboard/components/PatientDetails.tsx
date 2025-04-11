@@ -248,6 +248,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                   <p><span className="font-medium">Last Contacted:</span> {formatDate(caller.last_call_timestamp)}</p>
                   <p><span className="font-medium">Previous History:</span> {caller.previous_history || 'None'}</p>
                   <p><span className="font-medium">Sexual Orientation:</span> {caller.sexual_orientation || 'Not specified'}</p>
+                  <p><span className="font-medium">Number of Calls:</span> {calls.length}</p>
                   {selectedCall && (
                     <p><span className="font-medium">Risk Level:</span> {
                       selectedCall.urgency_score >= 8 ? 'Critical - Immediate intervention needed' :
