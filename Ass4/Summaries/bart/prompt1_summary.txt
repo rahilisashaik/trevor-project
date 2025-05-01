@@ -1,0 +1,15 @@
+=== Summary for call01.txt ===
+Summarize the following audio transcript in 3–4 sentences. Focus on the main issue discussed, the speaker's emotional state, and any signs of urgency or distress.
+
+=== Summary for call02.txt ===
+Summarize the main issue discussed, the speaker’s emotional state, and any signs of urgency or distress. The Trevor Project is a peer-to-peer mentoring program.
+
+=== Summary for call03.txt ===
+Summarize the main issue discussed, the speaker’s emotional state, and any signs of urgency or distress. The Trevor Project is a peer-to-peer mentoring program.
+
+=== Summary for call04.txt ===
+Transcript: Summarize the following audio transcript in 3–4 sentences. Focus on the main issue discussed, the speaker's emotional state, and any signs of urgency or distress.
+
+=== Summary for call05.txt ===
+The Trevor Project is a support group for people in crisis. The Trevor Project works with people who are struggling with self-esteem, depression, and suicidal thoughts. To help, call the Trevor Project at 1-800-273-8255.
+

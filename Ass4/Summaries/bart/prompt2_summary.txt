@@ -1,0 +1,15 @@
+=== Summary for call01.txt ===
+Use professional and neutral language. Read this conversation transcript and provide a concise summary that identifies the key concern, emotional tone, and any notable escalation or risk indicators.
+
+=== Summary for call02.txt ===
+Use professional and neutral language. Read this conversation transcript and provide a concise summary that identifies the key concern, emotional tone, and any notable escalation or risk indicators.
+
+=== Summary for call03.txt ===
+Use professional and neutral language. Read this conversation transcript and provide a concise summary that identifies the key concern, emotional tone, and any notable escalation or risk indicators. Use this transcript to help students understand the Trevor Project.
+
+=== Summary for call04.txt ===
+Use professional and neutral language. Read this conversation transcript and provide a concise summary that identifies the key concern, emotional tone, and any notable escalation or risk indicators.
+
+=== Summary for call05.txt ===
+Use professional and neutral language. Read this conversation transcript and provide a concise summary that identifies the key concern, emotional tone, and any notable escalation or risk indicators.
+

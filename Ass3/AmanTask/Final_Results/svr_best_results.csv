@@ -1,0 +1,4 @@
+Target,RMSE,Mean_Percentage_Deviation,Kernel,C,Gamma,Epsilon
+Avg. CPM,0.5693742438879607,168.88229953086497,rbf,10.0,scale,0.1
+Impr.,25.098559422117642,39.2000054448291,rbf,100.0,scale,0.1
+Interactions,1.2520452614147097,173139819263.97412,rbf,10.0,auto,0.2
