@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import EmotionRadarChart from './EmotionRadarChart';
 import SentimentTimeSeriesChart from './SentimentTimeSeriesChart';
+import { Phone, MessagesSquare } from "lucide-react";
 
 // Helper function for consistent date formatting
 const formatDate = (dateString: string) => {
@@ -223,11 +224,28 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
               </div>
               <div className="space-y-2 flex-1">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-2xl font-bold">{caller.name || 'Anonymous'}</h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-2xl font-bold">{caller.name || 'Anonymous'}</h3>
+                    {selectedCall && (
+                      <span className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${selectedCall.source === 'Chatbot' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                        {selectedCall.source === 'Chatbot' ? (
+                          <>
+                            <MessagesSquare className="w-4 h-4" />
+                            Chatbot
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-4 h-4" />
+                            Phone Call
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
-                        Select Call
+                        Select Interaction
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -238,6 +256,19 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                           className={selectedCall?.id === call.id ? 'bg-accent' : ''}
                         >
                           {formatDate(call.call_timestamp)}
+                          <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1 ${call.source === 'Chatbot' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                            {call.source === 'Chatbot' ? (
+                              <>
+                                <MessagesSquare className="w-4 h-4" />
+                                Chatbot
+                              </>
+                            ) : (
+                              <>
+                                <Phone className="w-4 h-4" />
+                                Phone Call
+                              </>
+                            )}
+                          </span>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -245,7 +276,7 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
                 </div>
                 <div className="space-y-1">
                   <p><span className="font-medium">Phone Number:</span> {caller.phone_number}</p>
-                  <p><span className="font-medium">Last Contacted:</span> {formatDate(caller.last_call_timestamp)}</p>
+                  <p><span className="font-medium">Last Interaction:</span> {formatDate(caller.last_call_timestamp)}</p>
                   <p><span className="font-medium">Previous History:</span> {caller.previous_history || 'None'}</p>
                   <p><span className="font-medium">Sexual Orientation:</span> {caller.sexual_orientation || 'Not specified'}</p>
                   <p><span className="font-medium">Number of Calls:</span> {calls.length}</p>
@@ -290,54 +321,83 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Emotion Analysis</CardTitle>
-            <CardDescription>
-              {selectedCall ? (
-                <span>Emotional state from {formatDate(selectedCall.call_timestamp)}</span>
-              ) : (
-                'Select a call to view emotion analysis'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedCall?.emotion_scores ? (
-              <EmotionRadarChart emotionScores={selectedCall.emotion_scores} />
-            ) : (
-              <p className="text-muted-foreground">No emotion analysis available for this call</p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Only show these sections if not a Chatbot call */}
+      {selectedCall?.source !== 'Chatbot' && (
+        <>
+          <div className="grid grid-cols-3 gap-6 mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Emotion Analysis</CardTitle>
+                <CardDescription>
+                  {selectedCall ? (
+                    <span>Emotional state from {formatDate(selectedCall.call_timestamp)}</span>
+                  ) : (
+                    'Select a call to view emotion analysis'
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedCall?.emotion_scores ? (
+                  <EmotionRadarChart emotionScores={selectedCall.emotion_scores} />
+                ) : (
+                  <p className="text-muted-foreground">No emotion analysis available for this call</p>
+                )}
+              </CardContent>
+            </Card>
 
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Sentiment Analysis Over Time</CardTitle>
-            <CardDescription>
-              {selectedCall ? (
-                <span>Sentiment progression from {formatDate(selectedCall.call_timestamp)}</span>
-              ) : (
-                'Select a call to view sentiment analysis'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedCall?.sentiment_time_series ? (
-              <SentimentTimeSeriesChart sentimentData={selectedCall.sentiment_time_series} />
-            ) : (
-              <p className="text-muted-foreground">No sentiment time series data available for this call</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Sentiment Analysis Over Time</CardTitle>
+                <CardDescription>
+                  {selectedCall ? (
+                    <span>Sentiment progression from {formatDate(selectedCall.call_timestamp)}</span>
+                  ) : (
+                    'Select a call to view sentiment analysis'
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedCall?.sentiment_time_series ? (
+                  <SentimentTimeSeriesChart sentimentData={selectedCall.sentiment_time_series} />
+                ) : (
+                  <p className="text-muted-foreground">No sentiment time series data available for this call</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Previous Calls</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {calls.map((call) => (
+                  <div 
+                    key={call.id} 
+                    className={`flex justify-between items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedCall?.id === call.id ? 'bg-accent' : 'hover:bg-accent/50'
+                    }`}
+                    onClick={() => setSelectedCall(call)}
+                  >
+                    <span>{formatDate(call.call_timestamp)}</span>
+                    <span>
+                      Duration: {formatDuration(call.duration)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>Key Questions & Responses</CardTitle>
           <CardDescription>
             {selectedCall ? (
-              <span>Call from {formatDate(selectedCall.call_timestamp)}</span>
+                <span>Call from {formatDate(selectedCall.call_timestamp)}</span>
             ) : (
               'Select a call to view the responses'
             )}
@@ -372,28 +432,6 @@ export default function PatientDetails({ caller }: { caller: Caller }) {
           ) : (
             <p className="text-muted-foreground">No transcript available for this call</p>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Previous Calls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {calls.map((call) => (
-              <div 
-                key={call.id} 
-                className={`flex justify-between items-center p-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedCall?.id === call.id ? 'bg-accent' : 'hover:bg-accent/50'
-                }`}
-                onClick={() => setSelectedCall(call)}
-              >
-                <span>{formatDate(call.call_timestamp)}</span>
-                <span>Duration: {formatDuration(call.duration)}</span>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

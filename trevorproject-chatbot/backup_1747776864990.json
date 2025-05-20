@@ -1,0 +1,24 @@
+{
+  "name": "Jeremy",
+  "phone": "62612345678",
+  "responses": [
+    "Jeremy",
+    "62612345678",
+    "I'm feeling pretty good!",
+    "Nope",
+    "Nope"
+  ],
+  "timestamp": "2025-05-20T21:34:10.323Z",
+  "sentimentAnalysis": {
+    "sentiment": "positive",
+    "intensity": 7,
+    "keywords": [
+      "feeling",
+      "pretty good"
+    ],
+    "summary": "The speaker is expressing positive emotions."
+  },
+  "urgencyScore": 1,
+  "error": "upsertCaller is not defined",
+  "backup_timestamp": "2025-05-20T21:34:24.990Z"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Jeremy",
+  "phone": "62612345678",
+  "responses": [
+    "Jeremy",
+    "62612345678",
+    "Great! I just had dinner with my entire family",
+    "Nope but school has been stressing me out a little",
+    "Nope"
+  ],
+  "timestamp": "2025-05-20T21:29:16.706Z",
+  "sentimentAnalysis": {
+    "sentiment": "neutral",
+    "intensity": 5,
+    "keywords": [
+      "dinner",
+      "family",
+      "school",
+      "stressing"
+    ],
+    "summary": "The person had a good time having dinner with their family but is feeling stressed about school."
+  },
+  "urgencyScore": 2,
+  "backup_timestamp": "2025-05-20T21:29:51.566Z"
+}
