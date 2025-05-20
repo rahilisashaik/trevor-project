@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+numpy
+openai
+pandas
+scikit-learn
+python-dotenv
+langchain-core
+langchain-community
+langchain-huggingface
+sentence-transformers
+faiss-cpu
