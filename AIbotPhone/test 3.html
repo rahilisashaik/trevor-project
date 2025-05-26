@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mic Test to AI</title>
+</head>
+<body>
+  <h1>🎙️ Live Mic to OpenAI Agent</h1>
+  <button onclick="startStreaming()">Start Speaking</button>
+  <script>
+    let ws;
+
+    async function startStreaming() {
+      ws = new WebSocket("ws://localhost:5050/media-stream");
+
+      ws.onopen = async () => {
+        console.log("WebSocket connected");
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext({ sampleRate: 8000 });
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        processor.onaudioprocess = (e) => {
+          const input = e.inputBuffer.getChannelData(0);
+          const pcm = new Int16Array(input.length);
+          for (let i = 0; i < input.length; i++) {
+            pcm[i] = input[i] * 32767;
+          }
+          const b64 = btoa(String.fromCharCode(...new Uint8Array(pcm.buffer)));
+          ws.send(JSON.stringify({ event: "media", media: { payload: b64 } }));
+        };
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+      };
+
+      ws.onerror = (e) => console.error("WS error", e);
+      ws.onclose = () => console.log("WebSocket closed");
+    }
+  </script>
+</body>
+</html>

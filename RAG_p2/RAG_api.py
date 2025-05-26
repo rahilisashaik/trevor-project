@@ -4,11 +4,117 @@ import numpy as np
 import openai
 import pandas as pd
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sklearn.metrics import mean_squared_error
 from typing import List, Optional, Dict, Any
+from supabase import create_client
+import hashlib
+
+load_dotenv()
+print("✅ ENV loaded:")
+print("SUPABASE_URL =", os.getenv("SUPABASE_URL"))
+print("SUPABASE_SERVICE_KEY =", "present" if os.getenv("SUPABASE_SERVICE_KEY") else "missing")
+
+
+
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
+supabase = create_client(supabase_url, supabase_key)
+
+def hash_csv_content(csv_bytes: bytes) -> str:
+    return hashlib.sha256(csv_bytes).hexdigest()
+
+
+# def upload_faiss_dir_to_supabase(dir_path: str, supabase_path: str, bucket: str = "vector-db"):
+#     for filename in os.listdir(dir_path):
+#         local_file_path = os.path.join(dir_path, filename)
+#         supabase_file_path = f"{supabase_path}/{filename}"
+
+#         with open(local_file_path, "rb") as f:
+#             res = supabase.storage.from_(bucket).upload(supabase_file_path, f, {"upsert": True})
+#             print(f"Uploaded {filename} -> {supabase_file_path}: {res}")
+
+def vector_db_exists_in_supabase(bucket: str, prefix: str) -> bool:
+    try:
+        files = supabase.storage.from_(bucket).list(prefix)
+        return any(f["name"].endswith(".faiss") for f in files)
+    except Exception as e:
+        print(f"Error checking Supabase for vector DB: {e}")
+        return False
+
+    
+def upload_faiss_dir_to_supabase(dir_path: str, supabase_path: str, bucket: str = "test"):
+    for filename in os.listdir(dir_path):
+        local_file_path = os.path.join(dir_path, filename)
+        supabase_file_path = f"{supabase_path}/{filename}"
+
+        try:
+            with open(local_file_path, "rb") as f:
+                res = supabase.storage.from_(bucket).upload(
+                    supabase_file_path,
+                    f,
+                    file_options={
+                        "content-type": "application/octet-stream",
+                        "x-upsert": "true"  # ✅ this is what enables overwrite
+                    }
+                )
+                print(f"✅ Uploaded: {local_file_path} → {supabase_file_path} | Response: {res}")
+        except Exception as e:
+            print(f"❌ Failed to upload {local_file_path}: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
+        
+        
+        
+def download_faiss_dir_from_supabase(bucket: str, prefix: str, local_path: str):
+    os.makedirs(local_path, exist_ok=True)
+    files = supabase.storage.from_(bucket).list(prefix)
+    for file in files:
+        file_name = file["name"]
+        data = supabase.storage.from_(bucket).download(f"{prefix}/{file_name}")
+        with open(os.path.join(local_path, file_name), "wb") as f:
+            f.write(data)
+
+
+
+    
+
+def validate_uploaded_faiss_dir(dir_path: str, supabase_path: str, bucket: str = "test"):
+    from pathlib import Path
+
+    local_files = set(os.listdir(dir_path))
+    uploaded_files = supabase.storage.from_(bucket).list(supabase_path)
+    
+    if not uploaded_files:
+        print(f"❌ No files found in Supabase at path: {supabase_path}")
+        return False
+
+    supabase_files = set(f["name"] for f in uploaded_files)
+
+    print(f"\n📦 Local files:     {sorted(local_files)}")
+    print(f"☁️ Supabase files:  {sorted(supabase_files)}")
+
+    missing = local_files - supabase_files
+    extra = supabase_files - local_files
+
+    if missing:
+        print(f"❌ Missing uploads: {missing}")
+    if extra:
+        print(f"⚠️ Extra files in Supabase: {extra}")
+
+    if not missing:
+        print(f"✅ All files from {dir_path} are present in Supabase at {supabase_path}")
+        return True
+    else:
+        return False
+
+
+
+
+
 
 # Set tokenizers parallelism to avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -17,7 +123,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 # Load environment variables
-load_dotenv()
+# load_dotenv()
 
 # Initialize OpenAI client
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -407,6 +513,126 @@ async def startup_event():
         print("No existing databases found. Creating new ones...")
         evergreen_db = create_vector_db(evergreen_documents, db_name=evergreen_db_name, force_rebuild=True)
         non_evergreen_db = create_vector_db(non_evergreen_documents, db_name=non_evergreen_db_name, force_rebuild=True)
+
+# API endpoint for databse upload
+# @app.post("/upload")
+# async def upload(file: UploadFile = File(...)):
+#      global evergreen_db, non_evergreen_db, evergreen_train_df, non_evergreen_train_df
+
+#      try:
+#         # Save uploaded file locally
+#         temp_file_path = "uploaded_search_terms.csv"
+#         with open(temp_file_path, "wb") as f:
+#             f.write(await file.read())
+        
+#         # Load new data and rebuild vector databases
+#         evergreen_train_df, non_evergreen_train_df, _, _ = load_and_split_data(temp_file_path)
+        
+#         evergreen_documents = create_documents_from_df(evergreen_train_df, is_evergreen=True)
+#         non_evergreen_documents = create_documents_from_df(non_evergreen_train_df, is_evergreen=False)
+
+#         evergreen_db = create_vector_db(evergreen_documents, db_name="faiss_index_evergreen", force_rebuild=True)
+#         non_evergreen_db = create_vector_db(non_evergreen_documents, db_name="faiss_index_non_evergreen", force_rebuild=True)
+#         upload_faiss_dir_to_supabase("faiss_index_evergreen", "faiss_index_evergreen", bucket="test")
+#         validate_uploaded_faiss_dir("faiss_index_evergreen", "faiss_index_evergreen", bucket="test")
+#         upload_faiss_dir_to_supabase("faiss_index_non_evergreen", "faiss_index_non_evergreen", bucket="test")
+
+
+#         return {"status": "success", "message": "Vector database successfully updated."}
+#      except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
+# @app.post("/upload")
+# async def upload(file: UploadFile = File(...)):
+#     global evergreen_db, non_evergreen_db, evergreen_train_df, non_evergreen_train_df
+
+#     try:
+#         csv_bytes = await file.read()
+#         csv_hash = hash_csv_content(csv_bytes)
+#         local_csv_path = "uploaded_search_terms.csv"
+
+#         # Save CSV to disk
+#         with open(local_csv_path, "wb") as f:
+#             f.write(csv_bytes)
+
+#         faiss_path_ever = f"faiss_db_{csv_hash}_evergreen"
+#         faiss_path_nonever = f"faiss_db_{csv_hash}_nonevergreen"
+#         bucket = "test"
+
+#         # Check for existing FAISS DB
+#         if vector_db_exists_in_supabase(bucket, faiss_path_ever) and vector_db_exists_in_supabase(bucket, faiss_path_nonever):
+#             print("✅ Found existing vector DBs in Supabase. Downloading...")
+#             download_faiss_dir_from_supabase(bucket, faiss_path_ever, faiss_path_ever)
+#             download_faiss_dir_from_supabase(bucket, faiss_path_nonever, faiss_path_nonever)
+
+#             evergreen_db = FAISS.load_local(faiss_path_ever, embeddings, allow_dangerous_deserialization=True)
+#             non_evergreen_db = FAISS.load_local(faiss_path_nonever, embeddings, allow_dangerous_deserialization=True)
+#         else:
+#             print("🔄 No existing vector DBs found. Rebuilding...")
+#             evergreen_train_df, non_evergreen_train_df, _, _ = load_and_split_data(local_csv_path)
+#             evergreen_documents = create_documents_from_df(evergreen_train_df, is_evergreen=True)
+#             non_evergreen_documents = create_documents_from_df(non_evergreen_train_df, is_evergreen=False)
+
+#             evergreen_db = create_vector_db(evergreen_documents, db_name=faiss_path_ever, force_rebuild=True)
+#             non_evergreen_db = create_vector_db(non_evergreen_documents, db_name=faiss_path_nonever, force_rebuild=True)
+
+#             upload_faiss_dir_to_supabase(faiss_path_ever, faiss_path_ever, bucket)
+#             upload_faiss_dir_to_supabase(faiss_path_nonever, faiss_path_nonever, bucket)
+
+#         return {"status": "success", "message": "Vector database is ready."}
+
+#     except Exception as e:
+#         import traceback
+#         traceback.print_exc()
+#         raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    global evergreen_db, evergreen_train_df
+
+    try:
+        csv_bytes = await file.read()
+        csv_hash = hash_csv_content(csv_bytes)
+        local_csv_path = "uploaded_search_terms.csv"
+
+        # Save CSV locally
+        with open(local_csv_path, "wb") as f:
+            f.write(csv_bytes)
+
+        faiss_path_ever = f"faiss_db_{csv_hash}_evergreen"
+        bucket = "test"
+
+        # Reuse existing evergreen DB if available
+        if vector_db_exists_in_supabase(bucket, faiss_path_ever):
+            print("✅ Found evergreen vector DB in Supabase. Downloading...")
+            download_faiss_dir_from_supabase(bucket, faiss_path_ever, faiss_path_ever)
+            evergreen_db = FAISS.load_local(faiss_path_ever, embeddings, allow_dangerous_deserialization=True)
+        else:
+            print("🔄 Rebuilding evergreen vector DB...")
+            evergreen_train_df, _, _, _ = load_and_split_data(local_csv_path)
+            evergreen_documents = create_documents_from_df(evergreen_train_df, is_evergreen=True)
+
+            evergreen_db = create_vector_db(evergreen_documents, db_name=faiss_path_ever, force_rebuild=True)
+            upload_faiss_dir_to_supabase(faiss_path_ever, faiss_path_ever, bucket)
+
+        return {"status": "success", "message": "Evergreen vector DB ready (non-evergreen skipped)."}
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
+
+    
+     
+ 
+class InputData(BaseModel):
+    text: str   
+
+@app.post("/")
+async def root(data: InputData):
+    return {"message": data.text}
+
 
 # API endpoint for search and prediction
 @app.post("/predict", response_model=PredictionResponse)
