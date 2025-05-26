@@ -1,0 +1,25 @@
+OVERALL ACCURACY SCORE: 49.99%
+
+=== DETAILED METRICS ===
+Average CPM RMSE: 225.40
+Average CPM Percentage Deviation: 107.51%
+Impressions RMSE: 4.15
+Impressions Percentage Deviation: 58.70%
+Interactions RMSE: 3.69
+Interactions Percentage Deviation: 10.03%
+
+Test completed on: 2025-04-07 10:22:29
+
+=== EVERGREEN METRICS ===
+Evergreen test samples: 19
+Evergreen CPM Percentage Deviation: 100.00%
+Evergreen Impressions Percentage Deviation: 35.64%
+Evergreen Interactions Percentage Deviation: nan%
+Evergreen Accuracy Score: 40.76%
+
+=== NON-EVERGREEN METRICS ===
+Non-evergreen test samples: 139
+Non-Evergreen CPM Percentage Deviation: 108.61%
+Non-Evergreen Impressions Percentage Deviation: 61.85%
+Non-Evergreen Interactions Percentage Deviation: 91.19%
+Non-Evergreen Accuracy Score: 21.02%
