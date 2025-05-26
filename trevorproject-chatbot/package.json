@@ -1,0 +1,20 @@
+{
+  "name": "trevorproject-chatbot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "A text-based chatbot for mental health support",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.4",
+    "readline-sync": "^1.4.10"
+  }
+}

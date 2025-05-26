@@ -419,6 +419,59 @@ async function transcribeAudioAndDecideHelp() {
     }
 }
 
+// Upsert into callers
+async function upsertCaller(data) {
+    const now = new Date().toISOString();
+    // Check if caller exists
+    const { data: existingCaller, error: selectError } = await supabase
+        .from('callers')
+        .select('*')
+        .eq('phone_number', data.phone)
+        .single();
+
+    if (selectError && selectError.code !== 'PGRST116') {
+        console.error('Error checking caller:', selectError);
+        return;
+    }
+
+    if (existingCaller) {
+        // Update last_call_timestamp and aggregated transcript/summary
+        await supabase
+            .from('callers')
+            .update({
+                last_call_timestamp: now,
+                aggregated_transcript: (existingCaller.aggregated_transcript || '') + '\n' + data.responses.join('\n'),
+                aggregated_summary: (existingCaller.aggregated_summary || '') + '\n' + (data.sentimentAnalysis?.summary || '')
+            })
+            .eq('phone_number', data.phone);
+    } else {
+        // Insert new caller
+        await supabase
+            .from('callers')
+            .insert([{
+                phone_number: data.phone,
+                name: data.name,
+                aggregated_transcript: data.responses.join('\n'),
+                aggregated_summary: data.sentimentAnalysis?.summary || '',
+                last_call_timestamp: now
+            }]);
+    }
+}
+
+// Insert into calls
+async function insertCall(data) {
+    await supabase
+        .from('calls')
+        .insert([{
+            phone_number: data.phone,
+            call_timestamp: data.timestamp,
+            transcript: data.responses.join('\n'),
+            summary: data.sentimentAnalysis?.summary || '',
+            urgency_score: data.urgencyScore,
+            // You can add more fields if you want, e.g. emotion_scores, sentiment_time_series, etc.
+        }]);
+}
+
 fastify.get('/', async (request, reply) => {
     reply.send({ message: 'Twilio Media Stream Server is running!' });
 });

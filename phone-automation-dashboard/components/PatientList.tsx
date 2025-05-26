@@ -180,7 +180,7 @@ export default function PatientList({ onSelect }: { onSelect: (caller: Caller) =
                 </div>
               </div>
               <div className="text-sm text-muted-foreground">
-                Last Call: {new Date(caller.last_call_timestamp).toLocaleDateString()}
+                Last Interaction: {new Date(caller.last_call_timestamp).toLocaleDateString()}
               </div>
             </div>
           </div>
