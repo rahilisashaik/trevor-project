@@ -67,45 +67,103 @@ type ChartDataPoint = {
 export default function Dashboard() {
 
   const SupabaseUpload = () => {
-    return (
-      <Upload
-        customRequest={async (options: UploadRequestOption) => {
-          const file = options.file as RcFile;
-          const { onSuccess, onError } = options;
+  return (
+    <Upload
+      customRequest={async (options: UploadRequestOption) => {
+        const file = options.file as RcFile;
+        const { onSuccess, onError } = options;
 
-          try {
-            const { data, error } = await supabase.storage
-              .from('test')
-              .upload(`uploads/${file.name}`, file, {
-                cacheControl: '3600',
-                upsert: true,
-              });
+        try {
+          // ✅ STEP 1: Upload to Supabase (optional)
+          const { data, error } = await supabase.storage
+            .from('test')
+            .upload(`uploads/${file.name}`, file, {
+              cacheControl: '3600',
+              upsert: true,
+            });
 
-            console.debug("Upload response:", { data, error });
-
-            if (error) {
-              console.error("Upload failed with error:", JSON.stringify(error, null, 2));
-              message.error('Upload failed');
-              onError?.(error);
-            } else {
-              console.info("Upload successful:", data);
-              message.success('Upload successful');
-              onSuccess?.(data);
-            }
-          } catch (err) {
-            console.error('Unexpected error during upload:', err);
-            message.error('Unexpected error during upload');
-            onError?.(err as Error);
+          if (error) {
+            message.error("Upload to Supabase failed");
+            console.error("Supabase error:", error);
+            onError?.(error);
+            return;
           }
-        }}
-        showUploadList={false}
-      >
-        <span>
-          <InButton icon={<UploadOutlined />}>Click to Upload</InButton>
-        </span>
-      </Upload>
-    );
-  };
+
+          // ✅ STEP 2: POST file to FastAPI backend
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("http://localhost:8000/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errMsg = await response.text();
+            throw new Error(`Backend upload failed: ${errMsg}`);
+          }
+
+          const resData = await response.json();
+          message.success("Upload successful and backend processed it.");
+          console.log("Backend response:", resData);
+          onSuccess?.(resData);
+        } catch (err) {
+          console.error("Upload failed:", err);
+          message.error("Upload or processing failed");
+          onError?.(err as Error);
+        }
+      }}
+      showUploadList={false}
+      accept=".csv"
+    >
+      <span>
+        <InButton icon={<UploadOutlined />}>Click to Upload CSV</InButton>
+      </span>
+    </Upload>
+  );
+};
+
+
+  // const SupabaseUpload = () => {
+  //   return (
+  //     <Upload
+  //       customRequest={async (options: UploadRequestOption) => {
+  //         const file = options.file as RcFile;
+  //         const { onSuccess, onError } = options;
+
+  //         try {
+  //           const { data, error } = await supabase.storage
+  //             .from('test')
+  //             .upload(`uploads/${file.name}`, file, {
+  //               cacheControl: '3600',
+  //               upsert: true,
+  //             });
+
+  //           console.debug("Upload response:", { data, error });
+
+  //           if (error) {
+  //             console.error("Upload failed with error:", JSON.stringify(error, null, 2));
+  //             message.error('Upload failed');
+  //             onError?.(error);
+  //           } else {
+  //             console.info("Upload successful:", data);
+  //             message.success('Upload successful');
+  //             onSuccess?.(data);
+  //           }
+  //         } catch (err) {
+  //           console.error('Unexpected error during upload:', err);
+  //           message.error('Unexpected error during upload');
+  //           onError?.(err as Error);
+  //         }
+  //       }}
+  //       showUploadList={false}
+  //     >
+  //       <span>
+  //         <InButton icon={<UploadOutlined />}>Click to Upload</InButton>
+  //       </span>
+  //     </Upload>
+  //   );
+  // };
 
   const props: UploadProps = {
     name: 'file',
