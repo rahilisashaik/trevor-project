@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +14,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Search, TrendingUp, Eye, MousePointerClick, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { UploadOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
+import { Button as InButton, message, Upload } from 'antd';
+import { supabase } from '../lib/supabase';
+import type { RcFile} from 'antd/es/upload/interface';
+import type { UploadRequestOption} from 'rc-upload/lib/interface';
+
+//File row definition
+
+
+
+
+
 
 // Define types for API responses
 type SearchResult = {
@@ -51,6 +65,123 @@ type ChartDataPoint = {
 }
 
 export default function Dashboard() {
+
+  const SupabaseUpload = () => {
+  return (
+    <Upload
+      customRequest={async (options: UploadRequestOption) => {
+        const file = options.file as RcFile;
+        const { onSuccess, onError } = options;
+
+        try {
+          // ✅ STEP 1: Upload to Supabase (optional)
+          const { data, error } = await supabase.storage
+            .from('test')
+            .upload(`uploads/${file.name}`, file, {
+              cacheControl: '3600',
+              upsert: true,
+            });
+
+          if (error) {
+            message.error("Upload to Supabase failed");
+            console.error("Supabase error:", error);
+            onError?.(error);
+            return;
+          }
+
+          // ✅ STEP 2: POST file to FastAPI backend
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("http://localhost:8000/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errMsg = await response.text();
+            throw new Error(`Backend upload failed: ${errMsg}`);
+          }
+
+          const resData = await response.json();
+          message.success("Upload successful and backend processed it.");
+          console.log("Backend response:", resData);
+          onSuccess?.(resData);
+        } catch (err) {
+          console.error("Upload failed:", err);
+          message.error("Upload or processing failed");
+          onError?.(err as Error);
+        }
+      }}
+      showUploadList={false}
+      accept=".csv"
+    >
+      <span>
+        <InButton icon={<UploadOutlined />}>Click to Upload CSV</InButton>
+      </span>
+    </Upload>
+  );
+};
+
+
+  // const SupabaseUpload = () => {
+  //   return (
+  //     <Upload
+  //       customRequest={async (options: UploadRequestOption) => {
+  //         const file = options.file as RcFile;
+  //         const { onSuccess, onError } = options;
+
+  //         try {
+  //           const { data, error } = await supabase.storage
+  //             .from('test')
+  //             .upload(`uploads/${file.name}`, file, {
+  //               cacheControl: '3600',
+  //               upsert: true,
+  //             });
+
+  //           console.debug("Upload response:", { data, error });
+
+  //           if (error) {
+  //             console.error("Upload failed with error:", JSON.stringify(error, null, 2));
+  //             message.error('Upload failed');
+  //             onError?.(error);
+  //           } else {
+  //             console.info("Upload successful:", data);
+  //             message.success('Upload successful');
+  //             onSuccess?.(data);
+  //           }
+  //         } catch (err) {
+  //           console.error('Unexpected error during upload:', err);
+  //           message.error('Unexpected error during upload');
+  //           onError?.(err as Error);
+  //         }
+  //       }}
+  //       showUploadList={false}
+  //     >
+  //       <span>
+  //         <InButton icon={<UploadOutlined />}>Click to Upload</InButton>
+  //       </span>
+  //     </Upload>
+  //   );
+  // };
+
+  const props: UploadProps = {
+    name: 'file',
+    action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    headers: {
+      authorization: 'authorization-text',
+    },
+    onChange(info) {
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully`);
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+  };
   const [searchParams, setSearchParams] = useState({
     searchTerm: "",
     matchType: "Broad Match",
@@ -62,6 +193,7 @@ export default function Dashboard() {
   const [activeMetric, setActiveMetric] = useState<string>("avg_cpm")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -148,13 +280,18 @@ export default function Dashboard() {
                 <Input
                   id="searchTerm"
                   placeholder="Enter search term..."
-                  className="pl-8"
+                  className="pl-8 mb-[30px]"
                   value={searchParams.searchTerm}
                   onChange={(e) => setSearchParams({ ...searchParams, searchTerm: e.target.value })}
                   required
                 />
+                {/* <Upload {...props}>
+                  <InButton icon={<UploadOutlined />}>Click to Upload</InButton>
+                </Upload> */}
+                <SupabaseUpload />
               </div>
             </div>
+            
 
             <div className="space-y-2">
               <Label>Match Type</Label>
